@@ -1,6 +1,6 @@
 # V2 executable protocol and current status
 
-The v2 code path formalizes whole Meridian documents using one public finite vocabulary. The two consistent and two minimally mutated documents and five case narratives remain provisional. The authoring model is withheld from generation and used only after candidate creation. A provisional development smoke has now generated eight candidates for the character pair. Its reviewed findings are in `reports/v2-smoke-findings.md`; no frozen-run or final comparative finding is claimed.
+The v2 code path formalizes whole Meridian documents using one public finite vocabulary. The two consistent and two minimally mutated documents and five case narratives remain provisional. The authoring model is withheld from generation and used only after candidate creation. A provisional development smoke has now generated eight candidates for the character pair. Its reviewed findings are in `reports/v2-smoke-findings.md`, with an interactive walkthrough in `reports/v2-smoke-explorer.html`. Both analyze the pre-repair source at commit `8c26cc8`; clause 11 has since been repaired in both character documents. No frozen-run or final comparative finding is claimed.
 
 ## What the executable fragment means
 

@@ -1,6 +1,6 @@
 # Synthetic specification benchmark v2: authoring draft
 
-This is a new, provisional benchmark. The earlier workspace benchmark and its pilot results remain frozen. These files are for review before formalizer prompts, reference judgments, or experimental runs are created.
+This is a new, provisional benchmark. The earlier workspace benchmark and its pilot results remain frozen. A provisional smoke has been run on the character pair. Clause 11 was repaired afterward in both versions; its saved candidates are historical pre-repair evidence. Independent benchmark review and freezing are still pending.
 
 The setting is a fictional incident-analysis assistant called Meridian. All names, incidents, tools, and messages are synthetic. The two document families are original writing inspired by the *structure* of the [Claude Constitution](https://www.anthropic.com/constitution) and the [OpenAI Model Spec](https://model-spec.openai.com/2026-08-18.html); neither draft represents either organization's policy.
 
