@@ -33,7 +33,7 @@ def version_of(command: list[str]) -> str:
         return "unavailable"
 
 
-def candidate_prompt(bundle: dict, method: str, mode: str, environment: str) -> str:
+def candidate_prompt(bundle: dict, method: str, mode: str, environment: str, development_cases: list[dict]) -> str:
     base = prompt_file("formalize.md")
     if mode == "decompose":
         base += "\n\n" + prompt_file("decompose.md")
@@ -43,6 +43,8 @@ def candidate_prompt(bundle: dict, method: str, mode: str, environment: str) -> 
         base + "\n\nMETHOD:\n" + method + ": " + METHODS[method]["api"]
         + "\n\nENVIRONMENT:\n" + environment
         + "\n\nREQUIREMENT BUNDLE:\n" + json.dumps(bundle, indent=2)
+        + "\n\nUNLABELED DEVELOPMENT CASES (interface examples only):\n"
+        + json.dumps(development_cases, indent=2)
     )
 
 
@@ -110,7 +112,13 @@ def run_experiment(config_path: Path, run_dir: Path | None, agent_writeup: bool)
             artifact = read_json(artifact_path)
         else:
             print(f"Generate {candidate_id}", flush=True)
-            prompt = candidate_prompt(expanded_bundle(benchmark, bundle_id), method, mode, environment)
+            development_cases = [
+                case for case in benchmark["development"] if case["bundle_id"] == bundle_id
+            ]
+            prompt = candidate_prompt(
+                expanded_bundle(benchmark, bundle_id), method, mode, environment,
+                development_cases,
+            )
             try:
                 artifact = call_codex(
                     prompt, FORMALIZATION_SCHEMA, candidate_dir / "codex_call",

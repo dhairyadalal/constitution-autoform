@@ -10,7 +10,7 @@ The candidate categories in the requirements analysis are coverage targets, not 
 
 ## Agent roles and separation
 
-The formalizer receives a bundle, environment semantics, and the target method. The judge receives the bundle, environment semantics, and cases, but no candidate code or method name. Three independent judge calls vote on each bundle. Majority agreement is the preliminary reference; disagreement or a majority `unresolved` result remains `unresolved` in scoring. Stage ordering means reference votes are generated after candidate formalizations. Prompt-level separation is not a hard host filesystem boundary.
+The formalizer receives a bundle, environment semantics, the target method, and two unlabeled development histories from that same bundle to demonstrate the fixed JSON interface. The judge receives the bundle, environment semantics, and held-out cases, but no candidate code or method name. Three independent judge calls vote on each bundle. Majority agreement is the preliminary reference; disagreement or a majority `unresolved` result remains `unresolved` in scoring. Stage ordering means reference votes are generated after candidate formalizations. Prompt-level separation is not a hard host filesystem boundary.
 
 ## Methods
 

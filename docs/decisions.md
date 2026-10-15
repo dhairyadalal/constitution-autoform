@@ -5,3 +5,4 @@
 3. The final findings write-up is a required deliverable.
 4. Z3 and clingo are the initial executable methods. Isabelle/HOL and nuXmv remain registered for the shared benchmark, with availability reported explicitly.
 5. Abstract values and dispositions can be included as `unresolved` where no operationalization follows from the case. The report must name the interpretation that a binary judgment would require.
+6. The first full run showed that a broad environment description leaves the action vocabulary and JSON structure underspecified for generated candidates. The revised interface states exact fields and event names and provides two unlabeled development histories per bundle. The earlier run remains saved with its file hashes as a diagnostic version.
