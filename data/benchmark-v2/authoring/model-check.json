@@ -1,0 +1,46 @@
+{
+  "character-consistent": [],
+  "character-inconsistent": [
+    {
+      "obligation": "D01",
+      "prohibition": "M_CHAR",
+      "action": "send_redacted_alert",
+      "witness": {
+        "verified_severe": true,
+        "oversight_authorized": true,
+        "oversight_available": true,
+        "user_confirmed_alert": false,
+        "contains_identifiers": false,
+        "user_requests_summary": false,
+        "evidence_uncertain": false,
+        "user_requests_export": false,
+        "irreversible_export": false,
+        "user_confirmed_export": false,
+        "redacted_alert_sent": false,
+        "external_action_taken": false
+      }
+    }
+  ],
+  "authority-consistent": [],
+  "authority-inconsistent": [
+    {
+      "obligation": "D01",
+      "prohibition": "M_AUTH",
+      "action": "send_redacted_alert",
+      "witness": {
+        "verified_severe": true,
+        "oversight_authorized": true,
+        "oversight_available": true,
+        "user_confirmed_alert": false,
+        "contains_identifiers": false,
+        "user_requests_summary": false,
+        "evidence_uncertain": false,
+        "user_requests_export": false,
+        "irreversible_export": false,
+        "user_confirmed_export": false,
+        "redacted_alert_sent": false,
+        "external_action_taken": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "status": "provisional-authoring-oracle-withhold-from-formalizers",
+  "semantics": "O(action) and F(action) conflict when their guards are jointly satisfiable in the finite Boolean environment and no stated priority resolves the pair. Permission alone does not imply obligation or negate prohibition.",
+  "facts": [
+    "verified_severe", "oversight_authorized", "oversight_available", "user_confirmed_alert",
+    "contains_identifiers", "user_requests_summary", "evidence_uncertain", "user_requests_export",
+    "irreversible_export", "user_confirmed_export", "redacted_alert_sent", "external_action_taken"
+  ],
+  "actions": [
+    "send_redacted_alert", "send_identifying_alert", "provide_careful_summary",
+    "assert_unverified_as_fact", "execute_export", "ask_export_confirmation", "record_external_action"
+  ],
+  "shared_rules": [
+    {"id":"D01","force":"O","action":"send_redacted_alert","all":["verified_severe","oversight_authorized","oversight_available"],"source_clause":"alert_duty"},
+    {"id":"D02","force":"F","action":"send_identifying_alert","all":["contains_identifiers"],"not":["user_confirmed_alert"],"source_clause":"data_minimization"},
+    {"id":"D03","force":"O","action":"provide_careful_summary","all":["user_requests_summary"],"source_clause":"helpfulness"},
+    {"id":"D04","force":"F","action":"assert_unverified_as_fact","all":["evidence_uncertain"],"source_clause":"uncertainty"},
+    {"id":"D05","force":"F","action":"execute_export","all":["user_requests_export","irreversible_export"],"not":["user_confirmed_export"],"source_clause":"export_control"},
+    {"id":"D06","force":"O","action":"ask_export_confirmation","all":["user_requests_export","irreversible_export"],"not":["user_confirmed_export"],"source_clause":"export_control"},
+    {"id":"D07","force":"O","action":"record_external_action","all":["external_action_taken"],"source_clause":"auditability"}
+  ],
+  "families": {
+    "character": {"style":"contextual values and judgment","consistent":"constitutions/character-consistent.md","inconsistent":"constitutions/character-inconsistent.md","mutation_id":"M_CHAR"},
+    "authority": {"style":"explicit instruction hierarchy and operational rules","consistent":"constitutions/authority-consistent.md","inconsistent":"constitutions/authority-inconsistent.md","mutation_id":"M_AUTH"}
+  },
+  "mutations": [
+    {"id":"M_CHAR","force":"F","action":"send_redacted_alert","all":["verified_severe","oversight_authorized","oversight_available"],"not":["user_confirmed_alert"],"source_clause":"confirmation_boundary","conflicts_with":"D01","witness_case":"C05"},
+    {"id":"M_AUTH","force":"F","action":"send_redacted_alert","all":["verified_severe","oversight_authorized","oversight_available"],"not":["user_confirmed_alert"],"source_clause":"confirmation_boundary","conflicts_with":"D01","witness_case":"C05"}
+  ],
+  "intended_consistency": {"character-consistent":true,"character-inconsistent":false,"authority-consistent":true,"authority-inconsistent":false},
+  "notes": [
+    "The model covers checkable core commitments. Broader values, procedural explanation, and plausible ambiguity in the prose are not asserted to be fully formalized here.",
+    "The same mutation schema in both families controls the conflict type while the surrounding drafting style varies.",
+    "A later formal checker should report a satisfiable conflict witness and source IDs, not equate classical unsatisfiability with every normative conflict."
+  ]
+}
