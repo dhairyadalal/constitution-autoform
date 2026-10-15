@@ -1,0 +1,17 @@
+{
+  "name": "toy-generation-failure",
+  "documents": [
+    "character-consistent",
+    "character-inconsistent"
+  ],
+  "methods": [
+    "smt"
+  ],
+  "prompt_modes": [
+    "direct"
+  ],
+  "repetitions": 1,
+  "review_votes": 3,
+  "codex_timeout_seconds": 10,
+  "isabelle_timeout_seconds": 120
+}

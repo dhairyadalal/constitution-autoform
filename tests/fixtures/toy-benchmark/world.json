@@ -1,0 +1,20 @@
+{
+  "facts": [
+    "incident",
+    "channel_ready",
+    "consent"
+  ],
+  "actions": [
+    "send_alert"
+  ],
+  "state_constraints": [],
+  "action_preconditions": {
+    "send_alert": [
+      "channel_ready"
+    ]
+  },
+  "action_effects": {},
+  "missing_fact_semantics": "Unknown facts range over both Boolean values.",
+  "priority_policy": "Only explicit overrides resolve opposing rules.",
+  "time_model": "One decision."
+}

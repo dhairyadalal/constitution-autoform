@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "id": "C01",
+      "facts": {
+        "incident": false,
+        "channel_ready": true,
+        "consent": false
+      },
+      "queries": [
+        "send_alert"
+      ]
+    },
+    {
+      "id": "C05",
+      "facts": {
+        "incident": true,
+        "channel_ready": true,
+        "consent": false
+      },
+      "queries": [
+        "send_alert"
+      ]
+    }
+  ]
+}
