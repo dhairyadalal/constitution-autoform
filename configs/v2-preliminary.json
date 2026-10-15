@@ -1,0 +1,10 @@
+{
+  "name": "v2-preliminary",
+  "documents": ["character-consistent", "character-inconsistent", "authority-consistent", "authority-inconsistent"],
+  "methods": ["smt", "fol", "asp", "isabelle"],
+  "prompt_modes": ["direct", "structured"],
+  "repetitions": 2,
+  "review_votes": 3,
+  "codex_timeout_seconds": 300,
+  "isabelle_timeout_seconds": 300
+}

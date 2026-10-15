@@ -1,46 +1,116 @@
 {
-  "character-consistent": [],
-  "character-inconsistent": [
-    {
-      "obligation": "D01",
-      "prohibition": "M_CHAR",
-      "action": "send_redacted_alert",
-      "witness": {
-        "verified_severe": true,
-        "oversight_authorized": true,
-        "oversight_available": true,
-        "user_confirmed_alert": false,
-        "contains_identifiers": false,
-        "user_requests_summary": false,
-        "evidence_uncertain": false,
-        "user_requests_export": false,
-        "irreversible_export": false,
-        "user_confirmed_export": false,
-        "redacted_alert_sent": false,
-        "external_action_taken": false
+  "character-consistent": {
+    "scope": "finite Boolean states satisfying declared invariants and action preconditions; exogenous case facts are unconstrained",
+    "conflicts": [],
+    "nonvacuity": {
+      "D01": true,
+      "D02": true,
+      "D03": true,
+      "D04": true,
+      "D05": true,
+      "D06": true,
+      "D07": true,
+      "D08": true,
+      "D09": true
+    },
+    "effect_invariant_violations": []
+  },
+  "character-inconsistent": {
+    "scope": "finite Boolean states satisfying declared invariants and action preconditions; exogenous case facts are unconstrained",
+    "conflicts": [
+      {
+        "rules": [
+          "D01",
+          "M_CHAR"
+        ],
+        "action": "send_redacted_alert",
+        "witness": {
+          "verified_severe": true,
+          "oversight_authorized": true,
+          "oversight_available": true,
+          "user_confirmed_redacted_alert": false,
+          "user_confirmed_identifying_alert": false,
+          "contains_identifiers": false,
+          "user_requests_summary": false,
+          "evidence_uncertain": false,
+          "user_requests_export": false,
+          "irreversible_export": false,
+          "user_confirmed_export": false,
+          "redacted_alert_sent": false,
+          "external_action_taken": false,
+          "audit_recorded": false
+        }
       }
-    }
-  ],
-  "authority-consistent": [],
-  "authority-inconsistent": [
-    {
-      "obligation": "D01",
-      "prohibition": "M_AUTH",
-      "action": "send_redacted_alert",
-      "witness": {
-        "verified_severe": true,
-        "oversight_authorized": true,
-        "oversight_available": true,
-        "user_confirmed_alert": false,
-        "contains_identifiers": false,
-        "user_requests_summary": false,
-        "evidence_uncertain": false,
-        "user_requests_export": false,
-        "irreversible_export": false,
-        "user_confirmed_export": false,
-        "redacted_alert_sent": false,
-        "external_action_taken": false
+    ],
+    "nonvacuity": {
+      "D01": true,
+      "D02": true,
+      "D03": true,
+      "D04": true,
+      "D05": true,
+      "D06": true,
+      "D07": true,
+      "D08": true,
+      "D09": true,
+      "M_CHAR": true
+    },
+    "effect_invariant_violations": []
+  },
+  "authority-consistent": {
+    "scope": "finite Boolean states satisfying declared invariants and action preconditions; exogenous case facts are unconstrained",
+    "conflicts": [],
+    "nonvacuity": {
+      "D01": true,
+      "D02": true,
+      "D03": true,
+      "D04": true,
+      "D05": true,
+      "D06": true,
+      "D07": true,
+      "D08": true,
+      "D09": true
+    },
+    "effect_invariant_violations": []
+  },
+  "authority-inconsistent": {
+    "scope": "finite Boolean states satisfying declared invariants and action preconditions; exogenous case facts are unconstrained",
+    "conflicts": [
+      {
+        "rules": [
+          "D01",
+          "M_AUTH"
+        ],
+        "action": "send_redacted_alert",
+        "witness": {
+          "verified_severe": true,
+          "oversight_authorized": true,
+          "oversight_available": true,
+          "user_confirmed_redacted_alert": false,
+          "user_confirmed_identifying_alert": false,
+          "contains_identifiers": false,
+          "user_requests_summary": false,
+          "evidence_uncertain": false,
+          "user_requests_export": false,
+          "irreversible_export": false,
+          "user_confirmed_export": false,
+          "redacted_alert_sent": false,
+          "external_action_taken": false,
+          "audit_recorded": false
+        }
       }
-    }
-  ]
+    ],
+    "nonvacuity": {
+      "D01": true,
+      "D02": true,
+      "D03": true,
+      "D04": true,
+      "D05": true,
+      "D06": true,
+      "D07": true,
+      "D08": true,
+      "D09": true,
+      "M_AUTH": true
+    },
+    "effect_invariant_violations": []
+  }
 }

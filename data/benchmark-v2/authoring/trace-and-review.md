@@ -10,10 +10,14 @@ This file is withheld from formalizers. It records intended design properties, n
 | D04: uncertain evidence entails `F(assert_unverified_as_fact)` | Clause 2 | Clause 5 | C01 |
 | D05 and D06: irreversible requested export without confirmation entails `F(execute_export)` and `O(ask_export_confirmation)` | Clause 5 | Clause 8 | C02 |
 | D07: external action entails `O(record_external_action)` | Clause 8 | Clause 10 | C03, C05 |
+| D08: a requested export permits a local preview | Clause 5 | Clause 8 | C02 |
+| D09: a verified incident with an unavailable channel permits a local alert draft | Clause 9 | Clause 6 | C04 |
 | M_CHAR: unconfirmed alert entails `F(send_redacted_alert)` even for a verified severe incident | Inconsistent clause 5 only | n/a | C05 |
 | M_AUTH: unconfirmed alert entails `F(send_redacted_alert)` even for a verified severe incident | n/a | Inconsistent clause 7 only | C05 |
 
-In each consistent document, C05 activates D01 and no rule forbids the redacted alert. In each inconsistent document, C05 activates D01 and its family-specific mutation. No provision assigns one of those two clauses precedence over the other. The conflict is on the *same action*, not merely on sharing information in two different forms. C03 includes user confirmation for the redacted alert so it can distinguish the identifying-disclosure boundary from the controlled conflict.
+In each consistent document, C05 activates D01 and no rule forbids the redacted alert. In each inconsistent document, C05 activates D01 and its family-specific mutation. No provision assigns one of those two clauses precedence over the other. The conflict is on the *same action*, not merely on sharing information in two different forms. C03 confirms the redacted alert but withholds confirmation for identifying disclosure. Its follow-up phase checks the next-decision audit duty after the redacted alert is sent.
+
+The executable checker uses Boolean states satisfying the explicit invariant `redacted_alert_sent -> external_action_taken`. Exogenous case facts may be set to any values consistent with that invariant. “Reachable” therefore means satisfiable in this bounded environment, not reachable from a complete operational transition system. The declared action effects are checked against the invariant; no elapsed-time guarantee is claimed. An omitted fact remains unknown in case analysis.
 
 ## Independent agent review, before freeze
 

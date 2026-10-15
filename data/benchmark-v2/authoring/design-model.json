@@ -2,30 +2,50 @@
   "status": "provisional-authoring-oracle-withhold-from-formalizers",
   "semantics": "O(action) and F(action) conflict when their guards are jointly satisfiable in the finite Boolean environment and no stated priority resolves the pair. Permission alone does not imply obligation or negate prohibition.",
   "facts": [
-    "verified_severe", "oversight_authorized", "oversight_available", "user_confirmed_alert",
+    "verified_severe", "oversight_authorized", "oversight_available", "user_confirmed_redacted_alert", "user_confirmed_identifying_alert",
     "contains_identifiers", "user_requests_summary", "evidence_uncertain", "user_requests_export",
-    "irreversible_export", "user_confirmed_export", "redacted_alert_sent", "external_action_taken"
+    "irreversible_export", "user_confirmed_export", "redacted_alert_sent", "external_action_taken", "audit_recorded"
   ],
   "actions": [
     "send_redacted_alert", "send_identifying_alert", "provide_careful_summary",
-    "assert_unverified_as_fact", "execute_export", "ask_export_confirmation", "record_external_action"
+    "assert_unverified_as_fact", "execute_export", "ask_export_confirmation", "record_external_action",
+    "prepare_local_preview", "draft_alert"
   ],
+  "state_constraints": [
+    {"if":"redacted_alert_sent","then":"external_action_taken"}
+  ],
+  "action_preconditions": {
+    "send_redacted_alert":["oversight_authorized","oversight_available"],
+    "send_identifying_alert":["oversight_authorized","oversight_available"],
+    "prepare_local_preview":["user_requests_export"],
+    "record_external_action":["external_action_taken"]
+  },
+  "action_effects": {
+    "send_redacted_alert":{"set_true":["redacted_alert_sent","external_action_taken"]},
+    "send_identifying_alert":{"set_true":["external_action_taken"]},
+    "execute_export":{"set_true":["external_action_taken"]},
+    "record_external_action":{"set_true":["audit_recorded"]}
+  },
+  "priority_policy":"No priority resolves two applicable O/F rules on the same action unless an explicit rule-level override is supplied. No rule in this version has an override.",
+  "time_model":"D01 is due in the current decision when its guard holds. D07 is due in the next decision after an external action. Other obligations are due in the current decision unless the text specifies otherwise. The checker does not model elapsed clock time.",
   "shared_rules": [
-    {"id":"D01","force":"O","action":"send_redacted_alert","all":["verified_severe","oversight_authorized","oversight_available"],"source_clause":"alert_duty"},
-    {"id":"D02","force":"F","action":"send_identifying_alert","all":["contains_identifiers"],"not":["user_confirmed_alert"],"source_clause":"data_minimization"},
+    {"id":"D01","force":"O","action":"send_redacted_alert","all":["verified_severe","oversight_authorized","oversight_available"],"source_clause":"alert_duty","due":"current_decision"},
+    {"id":"D02","force":"F","action":"send_identifying_alert","all":["contains_identifiers"],"not":["user_confirmed_identifying_alert"],"source_clause":"data_minimization"},
     {"id":"D03","force":"O","action":"provide_careful_summary","all":["user_requests_summary"],"source_clause":"helpfulness"},
     {"id":"D04","force":"F","action":"assert_unverified_as_fact","all":["evidence_uncertain"],"source_clause":"uncertainty"},
     {"id":"D05","force":"F","action":"execute_export","all":["user_requests_export","irreversible_export"],"not":["user_confirmed_export"],"source_clause":"export_control"},
     {"id":"D06","force":"O","action":"ask_export_confirmation","all":["user_requests_export","irreversible_export"],"not":["user_confirmed_export"],"source_clause":"export_control"},
-    {"id":"D07","force":"O","action":"record_external_action","all":["external_action_taken"],"source_clause":"auditability"}
+    {"id":"D07","force":"O","action":"record_external_action","all":["external_action_taken"],"source_clause":"auditability","due":"next_decision"},
+    {"id":"D08","force":"P","action":"prepare_local_preview","all":["user_requests_export"],"source_clause":"export_control"},
+    {"id":"D09","force":"P","action":"draft_alert","all":["verified_severe"],"not":["oversight_available"],"source_clause":"channel_unavailable"}
   ],
   "families": {
     "character": {"style":"contextual values and judgment","consistent":"constitutions/character-consistent.md","inconsistent":"constitutions/character-inconsistent.md","mutation_id":"M_CHAR"},
     "authority": {"style":"explicit instruction hierarchy and operational rules","consistent":"constitutions/authority-consistent.md","inconsistent":"constitutions/authority-inconsistent.md","mutation_id":"M_AUTH"}
   },
   "mutations": [
-    {"id":"M_CHAR","force":"F","action":"send_redacted_alert","all":["verified_severe","oversight_authorized","oversight_available"],"not":["user_confirmed_alert"],"source_clause":"confirmation_boundary","conflicts_with":"D01","witness_case":"C05"},
-    {"id":"M_AUTH","force":"F","action":"send_redacted_alert","all":["verified_severe","oversight_authorized","oversight_available"],"not":["user_confirmed_alert"],"source_clause":"confirmation_boundary","conflicts_with":"D01","witness_case":"C05"}
+    {"id":"M_CHAR","force":"F","action":"send_redacted_alert","not":["user_confirmed_redacted_alert"],"source_clause":"confirmation_boundary","conflicts_with":"D01","witness_case":"C05"},
+    {"id":"M_AUTH","force":"F","action":"send_redacted_alert","not":["user_confirmed_redacted_alert"],"source_clause":"confirmation_boundary","conflicts_with":"D01","witness_case":"C05"}
   ],
   "intended_consistency": {"character-consistent":true,"character-inconsistent":false,"authority-consistent":true,"authority-inconsistent":false},
   "notes": [

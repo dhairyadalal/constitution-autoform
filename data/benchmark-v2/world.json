@@ -1,0 +1,32 @@
+{
+  "facts": [
+    "verified_severe", "oversight_authorized", "oversight_available",
+    "user_confirmed_redacted_alert", "user_confirmed_identifying_alert",
+    "contains_identifiers", "user_requests_summary", "evidence_uncertain",
+    "user_requests_export", "irreversible_export", "user_confirmed_export",
+    "redacted_alert_sent", "external_action_taken", "audit_recorded"
+  ],
+  "actions": [
+    "send_redacted_alert", "send_identifying_alert", "provide_careful_summary",
+    "assert_unverified_as_fact", "execute_export", "ask_export_confirmation",
+    "record_external_action", "prepare_local_preview", "draft_alert"
+  ],
+  "state_constraints": [
+    {"if": "redacted_alert_sent", "then": "external_action_taken"}
+  ],
+  "action_preconditions": {
+    "send_redacted_alert": ["oversight_authorized", "oversight_available"],
+    "send_identifying_alert": ["oversight_authorized", "oversight_available"],
+    "prepare_local_preview": ["user_requests_export"],
+    "record_external_action": ["external_action_taken"]
+  },
+  "action_effects": {
+    "send_redacted_alert": {"set_true": ["redacted_alert_sent", "external_action_taken"]},
+    "send_identifying_alert": {"set_true": ["external_action_taken"]},
+    "execute_export": {"set_true": ["external_action_taken"]},
+    "record_external_action": {"set_true": ["audit_recorded"]}
+  },
+  "missing_fact_semantics": "Unknown; all invariant-respecting completions remain possible.",
+  "priority_policy": "Only explicit rule-level overrides resolve an applicable O/F pair on one action.",
+  "time_model": "current_decision or next_decision; no elapsed clock time"
+}

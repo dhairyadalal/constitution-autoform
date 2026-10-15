@@ -1,6 +1,6 @@
 # Experiment v2: audit and required update
 
-Status: design review, not ready to run. This plan uses the four provisional Meridian documents and five cases in `data/benchmark-v2/`. The previous 72-artifact pilot remains a separate engineering pilot.
+Status: v2 infrastructure implemented and authoring-model check passed in SMT, quantified FOL, ASP, and Isabelle/HOL. The benchmark still needs independent pre-freeze review, and no v2 candidate-generation experiment has run. The executable scope and commands are in `docs/v2-protocol.md`. This plan uses the four provisional Meridian documents and five cases in `data/benchmark-v2/`. The previous 72-artifact pilot remains a separate engineering pilot.
 
 ## Research question
 
