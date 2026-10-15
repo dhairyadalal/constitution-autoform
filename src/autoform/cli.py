@@ -228,10 +228,9 @@ def run_experiment(config_path: Path, run_dir: Path | None, agent_writeup: bool)
         results["candidates"].append(candidate)
     write_json(run_dir / "results.json", results)
     report_path = build_report(run_dir, agent_writeup=agent_writeup, timeout=config["codex_timeout_seconds"])
-    public_report = run_dir / "findings.md" if (run_dir / "findings.md").exists() else report_path
     (ROOT / "reports").mkdir(exist_ok=True)
-    (ROOT / "reports" / f"{run_dir.name}-findings.md").write_text(
-        public_report.read_text(encoding="utf-8"), encoding="utf-8"
+    (ROOT / "reports" / f"{run_dir.name}-summary.md").write_text(
+        report_path.read_text(encoding="utf-8"), encoding="utf-8"
     )
     print(f"Run saved to {run_dir}", flush=True)
     return run_dir
