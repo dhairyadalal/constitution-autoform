@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -300,7 +302,9 @@ def _agent_timeout(config: dict) -> int:
     return config.get("agent_timeout_seconds", config.get("codex_timeout_seconds", 300))
 
 
-def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_provisional: bool = False) -> None:
+def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_provisional: bool = False, workers: int = 1) -> None:
+    if workers < 1:
+        raise ValueError("workers must be positive")
     config = read_json(config_path)
     if set(config["methods"]) - METHODS:
         raise ValueError("Unknown method in config")
@@ -320,34 +324,57 @@ def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_p
         raise RuntimeError("Benchmark is provisional; review and freeze it before a main run, or use --allow-provisional for a development smoke run")
     manifest_path = output_dir / "manifest.json"
     if manifest_path.exists():
-        if read_json(manifest_path)["file_hashes"] != hashes:
+        manifest = read_json(manifest_path)
+        if manifest["file_hashes"] != hashes:
             raise RuntimeError("Benchmark or prompt changed; create a new run directory")
+        history = manifest.setdefault("execution_workers_history", [1])
+        if history[-1] != workers:
+            history.append(workers)
+            write_json(manifest_path, manifest)
     else:
         boundary = "Formalizer prompt contains public inputs only. " + ("NVIDIA hosted inference receives the prompt remotely." if generation_agent["provider"] == "nvidia" else "Local Codex CLI filesystem read access is not a hard security boundary.")
-        write_json(manifest_path, {"created_at_utc": datetime.now(timezone.utc).isoformat(), "config": config, "file_hashes": hashes, "benchmark_status": "frozen" if freeze_path.exists() else "provisional_development", "input_boundary": boundary})
-    for document in config["documents"]:
-        for method in config["methods"]:
-            for mode in config["prompt_modes"]:
-                for repetition in range(1, config["repetitions"] + 1):
-                    label = f"{document}__{method}__{mode}__{repetition:02d}"
-                    path = output_dir / "candidates" / label
-                    candidate_path = path / "candidate.json"
-                    if candidate_path.exists():
-                        candidate = read_json(candidate_path)
-                    else:
-                        try:
-                            candidate = call_agent(generation_prompt(document, method, mode), CANDIDATE_SCHEMA, path / "generation_call", _agent_timeout(config), generation_agent)
-                        except RuntimeError as exc:
-                            candidate = {"rules": [], "assumptions": [], "unsupported_clauses": [], "decomposition": [], "generation_error": str(exc)}
-                        write_json(candidate_path, candidate)
-                    result = assess_candidate(candidate, document, method, path, config["isabelle_timeout_seconds"])
-                    if with_reviews and result["validity"].get("schema") == "valid":
-                        result["natural_language_defensibility"] = review_candidate(candidate, document, path / "reviews", config["review_votes"], _agent_timeout(config), config)
-                    write_json(path / "assessment.json", result)
-                    print(f"{label}: {result['validity']['schema']}, {result['validity'].get('backend', {}).get('status', 'not_checked')}", flush=True)
+        write_json(manifest_path, {"created_at_utc": datetime.now(timezone.utc).isoformat(), "config": config, "file_hashes": hashes, "benchmark_status": "frozen" if freeze_path.exists() else "provisional_development", "input_boundary": boundary, "execution_workers_history": [workers]})
+
+    jobs = [
+        (document, method, mode, repetition)
+        for document in config["documents"]
+        for method in config["methods"]
+        for mode in config["prompt_modes"]
+        for repetition in range(1, config["repetitions"] + 1)
+    ]
+
+    backend_lock = threading.Lock()
+
+    def run_one(job: tuple[str, str, str, int]) -> str:
+        document, method, mode, repetition = job
+        label = f"{document}__{method}__{mode}__{repetition:02d}"
+        path = output_dir / "candidates" / label
+        candidate_path = path / "candidate.json"
+        if candidate_path.exists():
+            candidate = read_json(candidate_path)
+        else:
+            try:
+                candidate = call_agent(generation_prompt(document, method, mode), CANDIDATE_SCHEMA, path / "generation_call", _agent_timeout(config), generation_agent)
+            except RuntimeError as exc:
+                candidate = {"rules": [], "assumptions": [], "unsupported_clauses": [], "decomposition": [], "generation_error": str(exc)}
+            write_json(candidate_path, candidate)
+        with backend_lock:
+            result = assess_candidate(candidate, document, method, path, config["isabelle_timeout_seconds"])
+        if with_reviews and result["validity"].get("schema") == "valid":
+            result["natural_language_defensibility"] = review_candidate(candidate, document, path / "reviews", config["review_votes"], _agent_timeout(config), config)
+        write_json(path / "assessment.json", result)
+        return f"{label}: {result['validity']['schema']}, {result['validity'].get('backend', {}).get('status', 'not_checked')}"
+
+    if workers == 1:
+        for job in jobs:
+            print(run_one(job), flush=True)
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = [pool.submit(run_one, job) for job in jobs]
+            for future in as_completed(futures):
+                print(future.result(), flush=True)
     from .report import build_report
     print(f"Report: {build_report(output_dir)}", flush=True)
-
 
 def check_design(output_dir: Path, timeout: int) -> dict:
     world, hidden = public_world(), design_model()
@@ -378,6 +405,7 @@ def main() -> None:
     experiment.add_argument("--config", type=Path, default=ROOT / "configs" / "preliminary.json")
     experiment.add_argument("--output", type=Path, required=True)
     experiment.add_argument("--reviews", action="store_true")
+    experiment.add_argument("--workers", type=int, default=1, help="Concurrent candidate jobs; each job saves its own traces")
     experiment.add_argument("--allow-provisional", action="store_true", help="Only for development smoke runs")
     freeze = sub.add_parser("freeze", help="Record reviewed source and prompt hashes")
     freeze.add_argument("--config", type=Path, default=ROOT / "configs" / "preliminary.json")
@@ -426,7 +454,7 @@ def main() -> None:
                 print(f"{spec['role']}: {spec['model']} [{status}]")
             print("Listing does not guarantee inference access; test a model before a full run.")
     else:
-        run(args.config, args.output, args.reviews, args.allow_provisional)
+        run(args.config, args.output, args.reviews, args.allow_provisional, args.workers)
 
 
 if __name__ == "__main__":

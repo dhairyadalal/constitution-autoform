@@ -1,0 +1,20 @@
+{
+  "frozen_at_utc": "2026-10-15T08:46:48.604967+00:00",
+  "review_record": "data/benchmark/authoring/benchmark-review.json",
+  "review_record_sha256": "efb0da0b1aa863a19a1a503acaf49ad7d509c032dbe681b1d967f10b60b5c18d",
+  "file_hashes": {
+    "configs/preliminary.json": "c14d8812bf02f57244359d65e68d31f83cce48cfe21b44e9db1397413e982ced",
+    "data/benchmark/environment.md": "b61da725e79c849e77f15599ce634172bc572e782f955561a87dc4f818467e2a",
+    "data/benchmark/world.json": "d111ee19915420b5a4169f707af1a1f94c196235ff7e61d8bf57b782ed26242d",
+    "data/benchmark/cases/shared-cases.md": "dd77ee287af272be111fb78d28aca73821a67765596f2f09b84fedd39cdf64f5",
+    "data/benchmark/cases/cases.json": "2a7b99424d15eaf24e46b2fae2bc0b0362798eb0b680f2dbe0599065876d6e6c",
+    "data/benchmark/authoring/design-model.json": "8cdb16b20fed93409ee1cbe6c20acd6fb753a3d5e9c0e3b5df1505eab94519ad",
+    "prompts/formalize.md": "49e9a9bbf32aaf0d9573474097c61f24fa8467870ada7b9920348e4b62e1c9db",
+    "prompts/review.md": "db3705d0b2a89da070dfc1f7fa83a8d370b1e70bd8aec64216aeffe424154214",
+    "prompts/benchmark_review.md": "5c1b58c8c39792f174ed4132acfd86d498347957b581d215b7f901ce0167c1f2",
+    "data/benchmark/constitutions/authority-consistent.md": "128708c4e5e745c46de13ae7681425cba278b1af16b3f23814556b622aa174e7",
+    "data/benchmark/constitutions/authority-inconsistent.md": "1c8c9432958a534dbf7bd0e426e78b376d8372d457a974c28b70867c9bdbc8ac",
+    "data/benchmark/constitutions/character-consistent.md": "36ea792775bd43c0722189b6ab424e0e31a879d0f53d77231eb278a616b8d961",
+    "data/benchmark/constitutions/character-inconsistent.md": "876f8407ad120050178ea537565b40323a058a9391e0c08adc64098e93138940"
+  }
+}

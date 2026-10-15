@@ -34,11 +34,12 @@ class PipelineIntegrationTest(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, 'provisional'):
                     runner.run(CONFIG, run_dir, with_reviews=True)
                 self.assertFalse((run_dir / 'manifest.json').exists())
-                runner.run(CONFIG, run_dir, with_reviews=True, allow_provisional=True)
+                runner.run(CONFIG, run_dir, with_reviews=True, allow_provisional=True, workers=2)
                 self.assertEqual(len(calls.read_text().splitlines()), 32)
 
                 manifest = json.loads((run_dir / 'manifest.json').read_text())
                 self.assertEqual(manifest['benchmark_status'], 'provisional_development')
+                self.assertEqual(manifest['execution_workers_history'], [2])
                 self.assertEqual(len(list((run_dir / 'candidates').glob('*/assessment.json'))), 8)
                 for document in ('character-consistent', 'character-inconsistent'):
                     for method in ('smt', 'fol', 'asp', 'isabelle'):
@@ -70,6 +71,7 @@ class PipelineIntegrationTest(unittest.TestCase):
                 self.assertIn('Preserved provision', findings)
                 runner.run(CONFIG, run_dir, with_reviews=True, allow_provisional=True)
                 self.assertEqual(len(calls.read_text().splitlines()), 32, 'Resume must reuse saved agent calls')
+                self.assertEqual(json.loads((run_dir / 'manifest.json').read_text())['execution_workers_history'], [2, 1])
 
 
     def test_agent_failure_is_saved_without_stopping_the_run(self):

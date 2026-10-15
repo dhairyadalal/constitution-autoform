@@ -12,7 +12,7 @@ Set `ISABELLE_BIN` or put `isabelle` on `PATH` to run the Isabelle checker. Then
 autoform check-design
 autoform review-benchmark --config configs/preliminary.json --output runs/benchmark-review
 autoform freeze --config configs/preliminary.json --review-record runs/benchmark-review/review-record.json
-autoform run --config configs/preliminary.json --output runs/preliminary-<date> --reviews
+autoform run --config configs/preliminary.json --output runs/preliminary-<date> --reviews --workers 4
 ```
 
 Run a small provisional slice before the full experiment to inspect JSON validity, source fidelity, latency, and any agent errors. The model calls are single-turn structured requests. To try the optional NVIDIA configuration, use `autoform models --config configs/nvidia.json` and pass that configuration explicitly to the other commands.
