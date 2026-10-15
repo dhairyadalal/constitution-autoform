@@ -1,6 +1,6 @@
 # Synthetic constitution benchmark
 
-The benchmark contains two original Meridian specifications. Each has a consistent version and a version with one designed contradiction. The documents are provisional. A prior development smoke run used the character pair before a repair to clause 11. Its saved candidates remain at `runs/v2-smoke-20261015`; the interactive analysis is in `reports/preliminary-results.html`. The repaired documents have not been rerun. Independent agent review and freezing are pending.
+The benchmark contains two original Meridian specifications. Each has a consistent version and a version with one designed contradiction. The current version is frozen in `freeze.json` after six same-model Codex reviews preserved in `authoring/benchmark-review.json`. A 64-candidate preliminary experiment used these documents and five shared cases; its interactive analysis is in `reports/preliminary-results.html`.
 
 The setting, names, incidents, tools, and messages are synthetic. The document families draw on the structure of the [Claude Constitution](https://www.anthropic.com/constitution) and [OpenAI Model Spec](https://model-spec.openai.com/2026-08-18.html). They do not represent either organization's policy.
 
