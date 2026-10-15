@@ -158,7 +158,7 @@ def case_diagnostics(world: dict, rules: list[dict], cases: list[dict]) -> dict:
 def assess_candidate(candidate: dict, document: str, method: str, path: Path, timeout: int) -> dict:
     if candidate.get("generation_error"):
         return {
-            "validity": {"schema_and_source": "generation_failed", "reason": candidate["generation_error"]},
+            "validity": {"schema": "generation_failed", "source_trace": "not_checked", "reason": candidate["generation_error"]},
             "coherence": {"status": "not_checked"},
             "design_fidelity": {"status": "not_checked"},
             "natural_language_defensibility": {"status": "not_run"},
@@ -169,15 +169,13 @@ def assess_candidate(candidate: dict, document: str, method: str, path: Path, ti
     try:
         validate(world, rules)
         quote_issues = [r["id"] for r in rules if not r.get("source_quote") or r["source_quote"] not in source]
-        if quote_issues:
-            raise ValueError(f"Quotes not found verbatim in source: {quote_issues}")
         finite = analyze(world, rules)
         backend = backend_check(world, rules, method, path / "backend", timeout)
         cases = read_json(BASE / "cases" / "cases.json")["cases"]
         diagnostics = case_diagnostics(world, rules, cases)
         write_json(path / "case-diagnostics.json", diagnostics)
         return {
-            "validity": {"schema_and_source": "valid", "backend": backend},
+            "validity": {"schema": "valid", "source_trace": "valid" if not quote_issues else "quote_mismatch", "quote_issues": quote_issues, "backend": backend},
             "coherence": finite,
             "design_fidelity": design_fidelity(rules, design_rules(design_model(), document)),
             "natural_language_defensibility": {"status": "not_run", "reason": "Independent agent review must be requested separately"},
@@ -186,7 +184,7 @@ def assess_candidate(candidate: dict, document: str, method: str, path: Path, ti
         }
     except (KeyError, TypeError, ValueError, RuntimeError) as exc:
         return {
-            "validity": {"schema_and_source": "invalid", "reason": str(exc)},
+            "validity": {"schema": "invalid", "reason": str(exc)},
             "coherence": {"status": "not_checked"},
             "design_fidelity": {"status": "not_checked"},
             "natural_language_defensibility": {"status": "not_run"},
@@ -194,7 +192,7 @@ def assess_candidate(candidate: dict, document: str, method: str, path: Path, ti
 
 
 def _files_for_manifest(config_path: Path) -> list[Path]:
-    files = [config_path, BASE / "environment.md", BASE / "world.json", BASE / "cases" / "shared-cases.md", BASE / "cases" / "cases.json", BASE / "authoring" / "design-model.json", ROOT / "prompts" / "v2_formalize.md", ROOT / "prompts" / "v2_review.md", ROOT / "prompts" / "v2_benchmark_review.md"]
+    files = [config_path.resolve(), BASE / "environment.md", BASE / "world.json", BASE / "cases" / "shared-cases.md", BASE / "cases" / "cases.json", BASE / "authoring" / "design-model.json", ROOT / "prompts" / "v2_formalize.md", ROOT / "prompts" / "v2_review.md", ROOT / "prompts" / "v2_benchmark_review.md"]
     files += sorted((BASE / "constitutions").glob("*.md"))
     return files
 
@@ -305,10 +303,10 @@ def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_p
                             candidate = {"rules": [], "assumptions": [], "unsupported_clauses": [], "decomposition": [], "generation_error": str(exc)}
                         write_json(candidate_path, candidate)
                     result = assess_candidate(candidate, document, method, path, config["isabelle_timeout_seconds"])
-                    if with_reviews and result["validity"].get("schema_and_source") == "valid":
+                    if with_reviews and result["validity"].get("schema") == "valid":
                         result["natural_language_defensibility"] = review_candidate(candidate, document, path / "reviews", config["review_votes"], config["codex_timeout_seconds"])
                     write_json(path / "assessment.json", result)
-                    print(f"{label}: {result['validity']['schema_and_source']}, {result['validity'].get('backend', {}).get('status', 'not_checked')}", flush=True)
+                    print(f"{label}: {result['validity']['schema']}, {result['validity'].get('backend', {}).get('status', 'not_checked')}", flush=True)
     from .report import build_report
     print(f"Report: {build_report(output_dir)}", flush=True)
 

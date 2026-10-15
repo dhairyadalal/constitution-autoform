@@ -96,14 +96,15 @@ def build_report(run_dir: Path) -> Path:
         "The unit of analysis is a candidate constitution. Each target backend compiles from a candidate's common finite rule representation. Differences between target conditions concern method-conditioned extraction and checking, not independently generated native syntax. The source documents and cases are synthetic. Independent review votes are agent interpretations, not human annotations or semantic ground truth.",
         "",
         "## Key results", "",
-        "| Document | Backend | Candidates | Source-valid | Backend checked | Correct conflict finding | Complete exact core | Case status matches |",
-        "|---|---|---:|---:|---:|---:|---:|---:|",
+        "| Document | Backend | Candidates | Schema-valid | Source quotes exact | Backend checked | Correct conflict finding | Complete exact core | Case status matches |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for document in config["documents"]:
         expected_conflict = not hidden["intended_consistency"][document]
         for method in config["methods"]:
             group = grouped.get((document, method), [])
-            valid = [r for r in group if r["assessment"]["validity"].get("schema_and_source") == "valid"]
+            valid = [r for r in group if r["assessment"]["validity"].get("schema") == "valid"]
+            source_valid = [r for r in valid if r["assessment"]["validity"].get("source_trace") == "valid"]
             checked = [r for r in valid if r["assessment"]["validity"].get("backend", {}).get("status") == "checked"]
             correct = sum(bool(r["assessment"]["coherence"].get("conflicts")) == expected_conflict for r in valid)
             complete = sum(not r["assessment"]["design_fidelity"].get("missing_design_rules") and not r["assessment"]["design_fidelity"].get("extra_candidate_rules") for r in valid)
@@ -112,7 +113,7 @@ def build_report(run_dir: Path) -> Path:
                 m, t = _case_concordance(record, references[document])
                 matched += m
                 total += t
-            lines.append(f"| {document} | {method} | {len(group)} | {len(valid)} | {len(checked)} | {correct}/{len(valid)} | {complete}/{len(valid)} | {matched}/{total} |")
+            lines.append(f"| {document} | {method} | {len(group)} | {len(valid)} | {len(source_valid)} | {len(checked)} | {correct}/{len(valid)} | {complete}/{len(valid)} | {matched}/{total} |")
     lines += [
         "", "The conflict column compares each candidate's bounded result with the withheld design expectation. It cannot establish that the natural-language document has a unique interpretation. Case counts are diagnostic query matches across five scenarios and any stated follow-up phase; they are not independent accuracy samples.",
         "", "### Independent agent readings", "",
@@ -130,9 +131,11 @@ def build_report(run_dir: Path) -> Path:
     for record in records:
         assessment = record["assessment"]
         validity = assessment["validity"]
-        if validity.get("schema_and_source") != "valid":
-            categories["Generation, schema, or source-quote failure"].append(record)
+        if validity.get("schema") != "valid":
+            categories["Generation or schema failure"].append(record)
             continue
+        if validity.get("source_trace") != "valid":
+            categories["Source quote mismatch"].append(record)
         if validity.get("backend", {}).get("status") != "checked":
             categories["Native checker unavailable or failed"].append(record)
         expected = not hidden["intended_consistency"][record["document"]]
@@ -151,7 +154,7 @@ def build_report(run_dir: Path) -> Path:
             if any(vote for vote in reviews.get("material_omissions_by_vote", [])):
                 categories["Agent-noted prose omission"].append(record)
     reviewed = sum(r["assessment"].get("natural_language_defensibility", {}).get("status") == "agent_reviewed" for r in records)
-    for name in ("Generation, schema, or source-quote failure", "Native checker unavailable or failed", "Missed or spurious conflict", "Omitted intended core rule", "Added unmatched rule", "Partial agent review", "Unsupported or disputed source reading", "Agent-noted prose omission"):
+    for name in ("Generation or schema failure", "Source quote mismatch", "Native checker unavailable or failed", "Missed or spurious conflict", "Omitted intended core rule", "Added unmatched rule", "Partial agent review", "Unsupported or disputed source reading", "Agent-noted prose omission"):
         examples = categories[name]
         denominator = reviewed if name in {"Unsupported or disputed source reading", "Agent-noted prose omission"} else len(records)
         if denominator == 0:

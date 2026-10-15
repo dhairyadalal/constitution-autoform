@@ -1,0 +1,10 @@
+{
+  "name": "v2-provisional-smoke",
+  "documents": ["character-consistent", "character-inconsistent"],
+  "methods": ["smt", "fol", "asp", "isabelle"],
+  "prompt_modes": ["direct"],
+  "repetitions": 1,
+  "review_votes": 3,
+  "codex_timeout_seconds": 420,
+  "isabelle_timeout_seconds": 300
+}
