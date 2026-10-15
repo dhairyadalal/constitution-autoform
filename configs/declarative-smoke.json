@@ -1,0 +1,12 @@
+{
+  "name": "declarative-smoke",
+  "artifact_mode": "declarative",
+  "bundle_ids": ["sharing", "deletion"],
+  "methods": ["z3", "clingo"],
+  "prompt_modes": ["direct", "decompose"],
+  "repetitions": 1,
+  "judge_votes": 3,
+  "max_parallel_codex_calls": 2,
+  "candidate_timeout_seconds": 8,
+  "codex_timeout_seconds": 180
+}

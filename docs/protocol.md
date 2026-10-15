@@ -14,7 +14,7 @@ The formalizer receives a bundle, environment semantics, the target method, and 
 
 ## Methods
 
-Z3 and clingo are the first executable integrations. Both must return `compliant`, `violation`, or `unresolved` for a case. The generated source must actually use its named solver to decide, and the report retains source for inspection. Isabelle/HOL and nuXmv use the same benchmark when integrated; their absence in a run is `not_run`, not failure. The direct and decomposition prompts each use the same input. A later feedback condition must be analyzed separately because it uses additional computation.
+Z3 and clingo are the first executable integrations. In the main declarative mode, Codex produces SMT-LIB Boolean expressions or ASP rules; fixed adapters supply the case facts and compute `yes`, `no`, or `unresolved`. This prevents a candidate from hiding the decisive normative logic in Python. The earlier solver-backed Python mode is retained as a workflow baseline. Isabelle/HOL and nuXmv use the same benchmark when integrated; their absence in a run is `not_run`, not failure. The direct and decomposition prompts each use the same input. A later feedback condition must be analyzed separately because it uses additional computation.
 
 ## Evaluation
 

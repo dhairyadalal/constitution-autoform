@@ -12,10 +12,11 @@ from pathlib import Path
 
 from .backends import METHODS
 from .codex import (
-    FORMALIZATION_SCHEMA, JUDGMENT_SCHEMA, call_codex, prompt_file,
+    DECLARATIVE_SCHEMA, FORMALIZATION_SCHEMA, JUDGMENT_SCHEMA, call_codex, prompt_file,
 )
 from .dataset import ROOT, expanded_bundle, file_hashes, load_benchmark, read_json
 from .evaluation.execute import execute_candidate
+from .evaluation.declarative import execute_declarative
 from .evaluation.score import aggregate_votes, score_candidate
 from .reporting import build_report
 
@@ -33,14 +34,24 @@ def version_of(command: list[str]) -> str:
         return "unavailable"
 
 
-def candidate_prompt(bundle: dict, method: str, mode: str, environment: str, development_cases: list[dict]) -> str:
-    base = prompt_file("formalize.md")
-    if mode == "decompose":
-        base += "\n\n" + prompt_file("decompose.md")
+def candidate_prompt(bundle: dict, method: str, mode: str, environment: str, development_cases: list[dict], artifact_mode: str) -> str:
+    if artifact_mode == "declarative":
+        base = prompt_file("formalize_declarative.md")
+        base += "\n\n" + prompt_file("z3_interface.md" if method == "z3" else "clingo_interface.md")
+        if mode == "decompose":
+            base += "\n\n" + prompt_file("decompose_declarative.md")
+        else:
+            base += "\n\nSet `decomposition` to an empty array."
     else:
-        base += "\n\nSet `decomposition` to an empty array."
+        base = prompt_file("formalize.md")
+        if mode == "decompose":
+            base += "\n\n" + prompt_file("decompose.md")
+        else:
+            base += "\n\nSet `decomposition` to an empty array."
     return (
-        base + "\n\nMETHOD:\n" + method + ": " + METHODS[method]["api"]
+        base + "\n\nMETHOD:\n" + (
+            method if artifact_mode == "declarative" else method + ": " + METHODS[method]["api"]
+        )
         + "\n\nENVIRONMENT:\n" + environment
         + "\n\nREQUIREMENT BUNDLE:\n" + json.dumps(bundle, indent=2)
         + "\n\nUNLABELED DEVELOPMENT CASES (interface examples only):\n"
@@ -59,6 +70,9 @@ def judge_prompt(bundle: dict, cases: list[dict], environment: str) -> str:
 def run_experiment(config_path: Path, run_dir: Path | None, agent_writeup: bool) -> Path:
     benchmark = load_benchmark()
     config = read_json(config_path)
+    artifact_mode = config.get("artifact_mode", "python")
+    if artifact_mode not in {"python", "declarative"}:
+        raise ValueError(f"Unknown artifact mode: {artifact_mode}")
     unknown_bundles = set(config["bundle_ids"]) - set(benchmark["by_bundle"])
     unknown_methods = set(config["methods"]) - set(METHODS)
     if unknown_bundles or unknown_methods:
@@ -77,6 +91,7 @@ def run_experiment(config_path: Path, run_dir: Path | None, agent_writeup: bool)
             "run_id": run_dir.name,
             "started_at_utc": datetime.now(timezone.utc).isoformat(),
             "config": config,
+            "artifact_mode": artifact_mode,
             "bundle_ids": config["bundle_ids"],
             "methods": config["methods"],
             "prompt_modes": config["prompt_modes"],
@@ -117,20 +132,26 @@ def run_experiment(config_path: Path, run_dir: Path | None, agent_writeup: bool)
             ]
             prompt = candidate_prompt(
                 expanded_bundle(benchmark, bundle_id), method, mode, environment,
-                development_cases,
+                development_cases, artifact_mode,
             )
             try:
                 artifact = call_codex(
-                    prompt, FORMALIZATION_SCHEMA, candidate_dir / "codex_call",
+                    prompt, DECLARATIVE_SCHEMA if artifact_mode == "declarative" else FORMALIZATION_SCHEMA,
+                    candidate_dir / "codex_call",
                     config["codex_timeout_seconds"],
                 )
             except RuntimeError as exc:
-                artifact = {
-                    "code": "", "assumptions": [], "unsupported_requirements": [],
-                    "decomposition": [], "error": str(exc),
-                }
+                artifact = {"assumptions": [], "decomposition": [], "error": str(exc)}
+                if artifact_mode == "declarative":
+                    artifact.update({"artifact": "", "supported_requirements": []})
+                else:
+                    artifact.update({"code": "", "unsupported_requirements": []})
             write_json(artifact_path, artifact)
-            (candidate_dir / "candidate.py").write_text(artifact.get("code", ""), encoding="utf-8")
+            if artifact_mode == "declarative":
+                suffix = "smt.json" if method == "z3" else "lp"
+                (candidate_dir / f"candidate.{suffix}").write_text(artifact.get("artifact", ""), encoding="utf-8")
+            else:
+                (candidate_dir / "candidate.py").write_text(artifact.get("code", ""), encoding="utf-8")
         return {
             "candidate_id": candidate_id, "bundle_id": bundle_id,
             "method": method, "prompt_mode": mode,
@@ -179,16 +200,28 @@ def run_experiment(config_path: Path, run_dir: Path | None, agent_writeup: bool)
         case_results = [
             {
                 "case_id": case["id"],
-                "result": execute_candidate(
-                    spec["artifact"].get("code", ""), spec["method"], case,
-                    config["candidate_timeout_seconds"],
+                "result": (
+                    execute_declarative(
+                        spec["artifact"].get("artifact", ""),
+                        spec["artifact"].get("supported_requirements", []),
+                        spec["method"], case, config["candidate_timeout_seconds"],
+                    ) if artifact_mode == "declarative" else execute_candidate(
+                        spec["artifact"].get("code", ""), spec["method"], case,
+                        config["candidate_timeout_seconds"],
+                    )
                 ),
             }
             for case in bundle_cases
         ]
         candidate = {key: value for key, value in spec.items() if key != "artifact"}
         candidate["assumptions"] = spec["artifact"].get("assumptions", [])
-        candidate["unsupported_requirements"] = spec["artifact"].get("unsupported_requirements", [])
+        if artifact_mode == "declarative":
+            bundle_ids = benchmark["by_bundle"][spec["bundle_id"]]["requirement_ids"]
+            supported = spec["artifact"].get("supported_requirements", [])
+            candidate["supported_requirements"] = supported
+            candidate["unsupported_requirements"] = [rid for rid in bundle_ids if rid not in supported]
+        else:
+            candidate["unsupported_requirements"] = spec["artifact"].get("unsupported_requirements", [])
         candidate["generation_error"] = spec["artifact"].get("error")
         candidate["case_results"] = case_results
         candidate["score"] = score_candidate(case_results, reference)

@@ -20,6 +20,10 @@ BENCHMARK_PATHS = [
     "prompts/decompose.md",
     "prompts/judge.md",
     "prompts/writeup.md",
+    "prompts/formalize_declarative.md",
+    "prompts/z3_interface.md",
+    "prompts/clingo_interface.md",
+    "prompts/decompose_declarative.md",
 ]
 
 

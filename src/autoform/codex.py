@@ -50,6 +50,17 @@ WRITEUP_SCHEMA = {
     "properties": {"markdown": {"type": "string"}},
     "required": ["markdown"],
 }
+DECLARATIVE_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "artifact": {"type": "string"},
+        "supported_requirements": {"type": "array", "items": {"type": "string"}},
+        "assumptions": {"type": "array", "items": {"type": "string"}},
+        "decomposition": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["artifact", "supported_requirements", "assumptions", "decomposition"],
+}
 
 
 def prompt_file(name: str) -> str:

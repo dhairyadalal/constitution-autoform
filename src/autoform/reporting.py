@@ -39,7 +39,7 @@ def build_report(run_dir: Path, agent_writeup: bool = False, timeout: int = 180)
         "Which distinctions in one shared synthetic constitution benchmark survive formalization across methods?",
         "",
         "## Procedure",
-        f"Run `{manifest['run_id']}` used {len(manifest['bundle_ids'])} bundles, "
+        f"Run `{manifest['run_id']}` used {manifest.get('artifact_mode', 'python')} artifacts, {len(manifest['bundle_ids'])} bundles, "
         f"{len(results['case_ids'])} held-out cases, {manifest['repetitions']} repetitions, "
         f"and {manifest['judge_votes']} independent agent reference votes per bundle.",
         "The reference is an agent-constructed interpretation. Solver execution checks the generated artifact's behavior against that interpretation.",

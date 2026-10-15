@@ -16,7 +16,7 @@ The first executable comparison uses Z3 and clingo on identical requirement bund
 
 ## Reproduce
 
-Install dependencies with `uv sync` or `pip install -e .`. Codex CLI must be available on `PATH` and authenticated. `autoform inventory` shows the frozen dataset. `autoform run --config configs/pilot.json` generates formalizations, collects independent agent judgments, evaluates each candidate, and writes a report. `autoform run --config configs/smoke.json` runs a smaller end-to-end slice. `autoform report --run runs/<run-id>` regenerates the write-up from saved results.
+Install dependencies with `uv sync` or `pip install -e .`. Codex CLI must be available on `PATH` and authenticated. `autoform inventory` shows the frozen dataset. `autoform run --config configs/declarative-pilot.json` generates solver rules, collects independent agent judgments, evaluates each artifact, and writes a report. `autoform run --config configs/declarative-smoke.json` runs a smaller end-to-end slice. The earlier `configs/pilot.json` and `configs/smoke.json` use solver-backed Python and are retained as workflow baselines. `autoform report --run runs/<run-id>` regenerates the write-up from saved results.
 
 Each Codex formalization call receives the relevant bundle, environment interface, two unlabeled development histories, prompt, and output schema. Reference votes are created after formalization and never included in the formalizer's prompt. Codex CLI may have broader filesystem read access on the host; this pilot relies on prompt-level separation and stage ordering rather than a security isolation guarantee. The runner copies the final report to `reports/` and keeps complete traces in `runs/`. See `docs/protocol.md` for the exact interpretation of results.
 
