@@ -1,11 +1,10 @@
 {
-  "name": "smoke",
-  "bundle_ids": ["sharing", "deletion"],
-  "methods": ["z3", "clingo"],
-  "prompt_modes": ["direct", "decompose"],
+  "name": "provisional-smoke",
+  "documents": ["character-consistent", "character-inconsistent"],
+  "methods": ["smt", "fol", "asp", "isabelle"],
+  "prompt_modes": ["direct"],
   "repetitions": 1,
-  "judge_votes": 3,
-  "max_parallel_codex_calls": 2,
-  "candidate_timeout_seconds": 8,
-  "codex_timeout_seconds": 180
+  "review_votes": 3,
+  "codex_timeout_seconds": 420,
+  "isabelle_timeout_seconds": 300
 }

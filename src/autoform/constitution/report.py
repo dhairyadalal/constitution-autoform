@@ -1,13 +1,14 @@
-"""Deterministic evidence report for a completed v2 candidate run."""
+"""Deterministic evidence report for a completed candidate run."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections import defaultdict
 from pathlib import Path
 
-from autoform.dataset import ROOT
+from autoform.paths import ROOT
 
 from .runner import BASE, design_model, document_path, read_json, public_world, design_rules
 
@@ -77,6 +78,10 @@ def _case_consequence(record: dict, reference: dict, action: str, require_differ
 
 def build_report(run_dir: Path) -> Path:
     manifest = read_json(run_dir / "manifest.json")
+    for name, expected in manifest.get("file_hashes", {}).items():
+        path = ROOT / name
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError(f"Run source differs from current checkout: {name}. Use the saved report or restore the run's source commit.")
     records = _candidate_records(run_dir)
     if not records:
         raise ValueError("No candidate assessments in this run")
@@ -89,7 +94,7 @@ def build_report(run_dir: Path) -> Path:
     for record in records:
         grouped[(record["document"], record["method"])].append(record)
     lines = [
-        "# V2 preliminary findings", "",
+        "# Preliminary findings", "",
         "## Experimental setup and run", "",
         f"This run used {len(config['documents'])} whole natural-language document{'s' if len(config['documents']) != 1 else ''}, {len(cases)} shared diagnostic cases, {len(config['methods'])} target backend{'s' if len(config['methods']) != 1 else ''}, {len(config['prompt_modes'])} prompt mode{'s' if len(config['prompt_modes']) != 1 else ''}, and {config['repetitions']} repetition{'s' if config['repetitions'] != 1 else ''}. The saved run contains {len(records)} candidate assessment{'s' if len(records) != 1 else ''}. Benchmark status: `{manifest.get('benchmark_status', 'unknown')}`. Formalizers received only the source document, public environment, and public world vocabulary. The hidden design model and cases were used after candidate generation. Host filesystem read access was not blocked.",
         "",

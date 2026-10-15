@@ -1,1 +1,0 @@
-Before writing the declarative artifact, decompose each requirement into activation, normative force, target, exception, and temporal order. Record the decomposition as short strings in the `decomposition` field. Then encode those conditions in the target solver language. Do not put the decisive normative logic in prose or Python preprocessing.

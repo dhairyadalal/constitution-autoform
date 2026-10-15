@@ -9,62 +9,6 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from .dataset import ROOT
-
-
-FORMALIZATION_SCHEMA = {
-    "type": "object",
-    "additionalProperties": False,
-    "properties": {
-        "code": {"type": "string"},
-        "assumptions": {"type": "array", "items": {"type": "string"}},
-        "unsupported_requirements": {"type": "array", "items": {"type": "string"}},
-        "decomposition": {"type": "array", "items": {"type": "string"}},
-    },
-    "required": ["code", "assumptions", "unsupported_requirements", "decomposition"],
-}
-JUDGMENT_SCHEMA = {
-    "type": "object",
-    "additionalProperties": False,
-    "properties": {
-        "judgments": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "additionalProperties": False,
-                "properties": {
-                    "case_id": {"type": "string"},
-                    "answer": {"type": "string", "enum": ["yes", "no", "unresolved"]},
-                    "reason": {"type": "string"},
-                    "assumptions": {"type": "array", "items": {"type": "string"}},
-                },
-                "required": ["case_id", "answer", "reason", "assumptions"],
-            },
-        }
-    },
-    "required": ["judgments"],
-}
-WRITEUP_SCHEMA = {
-    "type": "object",
-    "additionalProperties": False,
-    "properties": {"markdown": {"type": "string"}},
-    "required": ["markdown"],
-}
-DECLARATIVE_SCHEMA = {
-    "type": "object",
-    "additionalProperties": False,
-    "properties": {
-        "artifact": {"type": "string"},
-        "supported_requirements": {"type": "array", "items": {"type": "string"}},
-        "assumptions": {"type": "array", "items": {"type": "string"}},
-        "decomposition": {"type": "array", "items": {"type": "string"}},
-    },
-    "required": ["artifact", "supported_requirements", "assumptions", "decomposition"],
-}
-
-
-def prompt_file(name: str) -> str:
-    return (ROOT / "prompts" / name).read_text(encoding="utf-8")
 
 
 def call_codex(prompt: str, schema: dict, trace_dir: Path, timeout: int) -> dict:

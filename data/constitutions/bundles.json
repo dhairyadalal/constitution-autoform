@@ -1,8 +1,0 @@
-[
-  {"id":"sharing","title":"External sharing","requirement_ids":["R05","R06","R08","R11","R13"]},
-  {"id":"logging","title":"Modification records","requirement_ids":["R04","R08"]},
-  {"id":"deletion","title":"Deletion authority","requirement_ids":["R08","R09","R10","R15"]},
-  {"id":"preservation","title":"Previous versions","requirement_ids":["R07","R08","R10"]},
-  {"id":"revocation","title":"Revoked approval","requirement_ids":["R08","R09","R15","R16"]},
-  {"id":"remedy","title":"Notification after unauthorized deletion","requirement_ids":["R08","R09","R14","R15"]}
-]

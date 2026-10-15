@@ -1,4 +1,4 @@
-"""Finite, explicit deontic fragment shared by the v2 checkers.
+"""Finite, explicit deontic fragment shared by the constitution checkers.
 
 This checker proves properties of supplied rules under a bounded Boolean world.
 It makes no claim that the rules exhaust the source document.

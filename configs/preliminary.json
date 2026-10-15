@@ -1,5 +1,5 @@
 {
-  "name": "v2-preliminary",
+  "name": "preliminary",
   "documents": ["character-consistent", "character-inconsistent", "authority-consistent", "authority-inconsistent"],
   "methods": ["smt", "fol", "asp", "isabelle"],
   "prompt_modes": ["direct", "structured"],

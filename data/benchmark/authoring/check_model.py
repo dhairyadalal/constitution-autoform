@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from autoform.v2.model import analyze
+from autoform.constitution.model import analyze
 
 
 ROOT = Path(__file__).resolve().parent

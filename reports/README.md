@@ -1,5 +1,5 @@
 # Reports
 
-[`preliminary-findings.md`](preliminary-findings.md) is the checked research write-up for the declarative pilot. Its evidence is in [`evidence/declarative-pilot/`](evidence/declarative-pilot/). The two timestamped Python reports document earlier workflow runs and are labeled as diagnostic baselines. Future runs place deterministic numeric summaries here; agent drafts remain under their run directories until checked.
+[Preliminary results](preliminary-results.html) is an interactive analysis of eight candidates from the pre-repair character documents. Its evidence is the saved development run `runs/v2-smoke-20261015` and source commit `8c26cc8`. Clause 11 has since been repaired. The current drafts have not been rerun.
 
-The v2 provisional smoke has an [interactive walkthrough](v2-smoke-explorer.html) and a [reviewed record](v2-smoke-findings.md). Both show results from the pre-repair character documents; the current benchmark draft has a revised clause 11 and has not been rerun.
+New runs write their analysis and complete evidence to their own `runs/<run>/` directory. The benchmark must pass independent agent review and be frozen before a comparative run.

@@ -1,5 +1,0 @@
-[
-  {"id":"A01","requirement_ids":["R01"],"question":"Which observable behaviors count as preserving user control, and whose assessment decides?"},
-  {"id":"A02","requirement_ids":["R02"],"question":"What measurable choice expresses privacy when no explicit rule determines the action?"},
-  {"id":"A03","requirement_ids":["R03"],"question":"How many decisions and which context establish a persistent disposition?"}
-]

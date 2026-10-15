@@ -1,4 +1,4 @@
-"""Prepare, generate, and assess v2 whole-document formalizations."""
+"""Prepare, generate, and assess whole-document constitution formalizations."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from autoform.codex import call_codex
-from autoform.dataset import ROOT
+from autoform.paths import ROOT
 
 from .asp import check_asp
 from .fol import check_fol
@@ -17,7 +17,7 @@ from .isabelle import check_theory
 from .model import analyze, case_status, validate
 from .smt import check_smt
 
-BASE = ROOT / "data" / "benchmark-v2"
+BASE = ROOT / "data" / "benchmark"
 METHODS = {"smt", "fol", "asp", "isabelle"}
 METHOD_GUIDANCE = {
     "smt": "The rules will be compiled to a quantifier-free Boolean SMT query over possible states.",
@@ -192,7 +192,7 @@ def assess_candidate(candidate: dict, document: str, method: str, path: Path, ti
 
 
 def _files_for_manifest(config_path: Path) -> list[Path]:
-    files = [config_path.resolve(), BASE / "environment.md", BASE / "world.json", BASE / "cases" / "shared-cases.md", BASE / "cases" / "cases.json", BASE / "authoring" / "design-model.json", ROOT / "prompts" / "v2_formalize.md", ROOT / "prompts" / "v2_review.md", ROOT / "prompts" / "v2_benchmark_review.md"]
+    files = [config_path.resolve(), BASE / "environment.md", BASE / "world.json", BASE / "cases" / "shared-cases.md", BASE / "cases" / "cases.json", BASE / "authoring" / "design-model.json", ROOT / "prompts" / "formalize.md", ROOT / "prompts" / "review.md", ROOT / "prompts" / "benchmark_review.md"]
     files += sorted((BASE / "constitutions").glob("*.md"))
     return files
 
@@ -206,7 +206,7 @@ def generation_prompt(document: str, method: str, mode: str) -> str:
         raise ValueError("Unknown method or prompt mode")
     instruction = ("List candidate provisions and their relationships in `decomposition` before encoding rules." if mode == "structured" else "Set `decomposition` to an empty array and formalize directly.")
     return "\n\n".join([
-        (ROOT / "prompts" / "v2_formalize.md").read_text(encoding="utf-8"),
+        (ROOT / "prompts" / "formalize.md").read_text(encoding="utf-8"),
         f"Target checker: {method}. {METHOD_GUIDANCE[method]} {instruction}",
         "PUBLIC WORLD VOCABULARY AND SEMANTICS:\n" + json.dumps(public_world(), indent=2),
         "COMMON ENVIRONMENT:\n" + (BASE / "environment.md").read_text(encoding="utf-8"),
@@ -216,7 +216,7 @@ def generation_prompt(document: str, method: str, mode: str) -> str:
 
 def review_candidate(candidate: dict, document: str, path: Path, votes: int, timeout: int) -> dict:
     source = document_path(document).read_text(encoding="utf-8")
-    prompt = "\n\n".join([(ROOT / "prompts" / "v2_review.md").read_text(encoding="utf-8"), "SPECIFICATION:\n" + source, "PROPOSED RULES:\n" + json.dumps(candidate.get("rules", []), indent=2)])
+    prompt = "\n\n".join([(ROOT / "prompts" / "review.md").read_text(encoding="utf-8"), "SPECIFICATION:\n" + source, "PROPOSED RULES:\n" + json.dumps(candidate.get("rules", []), indent=2)])
     batches = []
     for index in range(1, votes + 1):
         vote_path = path / f"vote-{index:02d}.json"
@@ -246,7 +246,7 @@ def review_candidate(candidate: dict, document: str, path: Path, votes: int, tim
 def review_benchmark(output_dir: Path, votes: int, timeout: int) -> Path:
     if votes < 3:
         raise ValueError("At least three independent review calls are required")
-    instruction = (ROOT / "prompts" / "v2_benchmark_review.md").read_text(encoding="utf-8")
+    instruction = (ROOT / "prompts" / "benchmark_review.md").read_text(encoding="utf-8")
     environment = (BASE / "environment.md").read_text(encoding="utf-8")
     cases = (BASE / "cases" / "shared-cases.md").read_text(encoding="utf-8")
     reviews = {}
@@ -280,7 +280,7 @@ def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_p
         if frozen.get("file_hashes") != hashes:
             raise RuntimeError("Frozen benchmark or prompt changed; create a new benchmark version")
     elif not allow_provisional:
-        raise RuntimeError("v2 benchmark is provisional; review and freeze it before a main run, or use --allow-provisional for a development smoke run")
+        raise RuntimeError("Benchmark is provisional; review and freeze it before a main run, or use --allow-provisional for a development smoke run")
     manifest_path = output_dir / "manifest.json"
     if manifest_path.exists():
         if read_json(manifest_path)["file_hashes"] != hashes:
@@ -334,15 +334,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     design = sub.add_parser("check-design", help="Check withheld authoring rules in all four backends")
-    design.add_argument("--output", type=Path, default=ROOT / "runs" / "v2-design-check")
+    design.add_argument("--output", type=Path, default=ROOT / "runs" / "design-check")
     design.add_argument("--isabelle-timeout", type=int, default=300)
     experiment = sub.add_parser("run", help="Generate and assess method-conditioned candidates")
-    experiment.add_argument("--config", type=Path, default=ROOT / "configs" / "v2-preliminary.json")
+    experiment.add_argument("--config", type=Path, default=ROOT / "configs" / "preliminary.json")
     experiment.add_argument("--output", type=Path, required=True)
     experiment.add_argument("--reviews", action="store_true")
     experiment.add_argument("--allow-provisional", action="store_true", help="Only for development smoke runs")
     freeze = sub.add_parser("freeze", help="Record reviewed source and prompt hashes")
-    freeze.add_argument("--config", type=Path, default=ROOT / "configs" / "v2-preliminary.json")
+    freeze.add_argument("--config", type=Path, default=ROOT / "configs" / "preliminary.json")
     freeze.add_argument("--review-record", type=Path, required=True)
     benchmark_review = sub.add_parser("review-benchmark", help="Collect independent agent reviews before freezing")
     benchmark_review.add_argument("--output", type=Path, required=True)
