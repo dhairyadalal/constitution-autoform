@@ -8,7 +8,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from autoform.codex import call_codex
+from autoform.agents import agent_spec, call_agent, configured_models, list_nvidia_models, nvidia_api_key
 from autoform.paths import ROOT
 
 from .asp import check_asp
@@ -198,7 +198,15 @@ def _files_for_manifest(config_path: Path) -> list[Path]:
 
 
 def _hashes(files: list[Path]) -> dict[str, str]:
-    return {str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
+    result = {}
+    for path in files:
+        resolved = path.resolve()
+        try:
+            name = str(resolved.relative_to(ROOT))
+        except ValueError:
+            name = str(resolved)
+        result[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return result
 
 
 def generation_prompt(document: str, method: str, mode: str) -> str:
@@ -214,17 +222,20 @@ def generation_prompt(document: str, method: str, mode: str) -> str:
     ])
 
 
-def review_candidate(candidate: dict, document: str, path: Path, votes: int, timeout: int) -> dict:
+def review_candidate(candidate: dict, document: str, path: Path, votes: int, timeout: int, config: dict) -> dict:
     source = document_path(document).read_text(encoding="utf-8")
     prompt = "\n\n".join([(ROOT / "prompts" / "review.md").read_text(encoding="utf-8"), "SPECIFICATION:\n" + source, "PROPOSED RULES:\n" + json.dumps(candidate.get("rules", []), indent=2)])
     batches = []
+    model_assignments = []
     for index in range(1, votes + 1):
+        spec = agent_spec(config, "review", index)
+        model_assignments.append({"vote": index, "provider": spec["provider"], "model": spec.get("model")})
         vote_path = path / f"vote-{index:02d}.json"
         if vote_path.exists():
             vote = read_json(vote_path)
         else:
             try:
-                vote = call_codex(prompt, REVIEW_SCHEMA, path / f"call-{index:02d}", timeout)
+                vote = call_agent(prompt, REVIEW_SCHEMA, path / f"call-{index:02d}", timeout, spec)
             except RuntimeError as exc:
                 vote = {"rule_reviews": [], "material_omissions": [], "error": str(exc)}
             write_json(vote_path, vote)
@@ -240,12 +251,28 @@ def review_candidate(candidate: dict, document: str, path: Path, votes: int, tim
             else:
                 complete = False
         verdicts[rule["id"]] = {"verdict": choices[0] if len(choices) == votes and len(set(choices)) == 1 else "disputed_or_incomplete", "votes": choices}
-    return {"status": "agent_reviewed" if complete else "partial_review", "reviewer_count": votes, "rule_verdicts": verdicts, "material_omissions_by_vote": [batch.get("material_omissions", []) for batch in batches], "votes_preserved_at": str(path), "qualification": "Independent agent readings, not human annotation or semantic ground truth"}
+    return {"status": "agent_reviewed" if complete else "partial_review", "reviewer_count": votes, "model_assignments": model_assignments, "rule_verdicts": verdicts, "material_omissions_by_vote": [batch.get("material_omissions", []) for batch in batches], "votes_preserved_at": str(path), "qualification": "Independent agent readings, not human annotation or semantic ground truth"}
 
 
-def review_benchmark(output_dir: Path, votes: int, timeout: int) -> Path:
+def review_benchmark(output_dir: Path, votes: int, timeout: int, config_path: Path) -> Path:
     if votes < 3:
         raise ValueError("At least three independent review calls are required")
+    config = read_json(config_path)
+    assignments = [agent_spec(config, "review", index) for index in range(1, votes + 1)]
+    if assignments[0]["provider"] == "nvidia":
+        nvidia_api_key()
+    review_manifest = output_dir / "review-manifest.json"
+    expected_manifest = {
+        "config_sha256": hashlib.sha256(config_path.read_bytes()).hexdigest(),
+        "model_assignments": [{"vote": index, "provider": spec["provider"], "model": spec.get("model")} for index, spec in enumerate(assignments, 1)],
+    }
+    if review_manifest.exists():
+        if read_json(review_manifest) != expected_manifest:
+            raise RuntimeError("Review configuration changed; create a new review directory")
+    else:
+        if any(output_dir.glob("*/vote-*.json")):
+            raise RuntimeError("Existing review votes have no model manifest; create a new review directory")
+        write_json(review_manifest, expected_manifest)
     instruction = (ROOT / "prompts" / "benchmark_review.md").read_text(encoding="utf-8")
     environment = (BASE / "environment.md").read_text(encoding="utf-8")
     cases = (BASE / "cases" / "shared-cases.md").read_text(encoding="utf-8")
@@ -259,20 +286,30 @@ def review_benchmark(output_dir: Path, votes: int, timeout: int) -> Path:
                 vote = read_json(path)
             else:
                 try:
-                    vote = call_codex(prompt, BENCHMARK_REVIEW_SCHEMA, output_dir / family / f"call-{index:02d}", timeout)
+                    vote = call_agent(prompt, BENCHMARK_REVIEW_SCHEMA, output_dir / family / f"call-{index:02d}", timeout, assignments[index - 1])
                 except RuntimeError as exc:
                     vote = {"error": str(exc)}
                 write_json(path, vote)
             reviews[family].append(vote)
-    record = {"status": "agent_reviewed", "votes_per_family": votes, "families": reviews, "qualification": "Independent agent readings, not human annotation or semantic ground truth"}
+    record = {"status": "agent_reviewed", "votes_per_family": votes, "config_sha256": hashlib.sha256(config_path.read_bytes()).hexdigest(), "model_assignments": [{"vote": index, "provider": spec["provider"], "model": spec.get("model")} for index, spec in enumerate(assignments, 1)], "families": reviews, "qualification": "Independent agent readings, not human annotation or semantic ground truth"}
     write_json(output_dir / "review-record.json", record)
     return output_dir / "review-record.json"
+
+
+def _agent_timeout(config: dict) -> int:
+    return config.get("agent_timeout_seconds", config.get("codex_timeout_seconds", 300))
 
 
 def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_provisional: bool = False) -> None:
     config = read_json(config_path)
     if set(config["methods"]) - METHODS:
         raise ValueError("Unknown method in config")
+    generation_agent = agent_spec(config, "generation")
+    if with_reviews:
+        for index in range(1, config["review_votes"] + 1):
+            agent_spec(config, "review", index)
+    if generation_agent["provider"] == "nvidia":
+        nvidia_api_key()
     hashes = _hashes(_files_for_manifest(config_path))
     freeze_path = BASE / "freeze.json"
     if freeze_path.exists():
@@ -286,7 +323,7 @@ def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_p
         if read_json(manifest_path)["file_hashes"] != hashes:
             raise RuntimeError("Benchmark or prompt changed; create a new run directory")
     else:
-        write_json(manifest_path, {"created_at_utc": datetime.now(timezone.utc).isoformat(), "config": config, "file_hashes": hashes, "benchmark_status": "frozen" if freeze_path.exists() else "provisional_development", "isolation": "Formalizer invoked in a separate temporary working directory; prompt contains public inputs only. Host filesystem access is not blocked."})
+        write_json(manifest_path, {"created_at_utc": datetime.now(timezone.utc).isoformat(), "config": config, "file_hashes": hashes, "benchmark_status": "frozen" if freeze_path.exists() else "provisional_development", "input_boundary": "Formalizer prompt contains public inputs only. NVIDIA hosted inference receives the prompt remotely; local Codex CLI filesystem access is not a hard security boundary."})
     for document in config["documents"]:
         for method in config["methods"]:
             for mode in config["prompt_modes"]:
@@ -298,13 +335,13 @@ def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_p
                         candidate = read_json(candidate_path)
                     else:
                         try:
-                            candidate = call_codex(generation_prompt(document, method, mode), CANDIDATE_SCHEMA, path / "codex_call", config["codex_timeout_seconds"])
+                            candidate = call_agent(generation_prompt(document, method, mode), CANDIDATE_SCHEMA, path / "generation_call", _agent_timeout(config), generation_agent)
                         except RuntimeError as exc:
                             candidate = {"rules": [], "assumptions": [], "unsupported_clauses": [], "decomposition": [], "generation_error": str(exc)}
                         write_json(candidate_path, candidate)
                     result = assess_candidate(candidate, document, method, path, config["isabelle_timeout_seconds"])
                     if with_reviews and result["validity"].get("schema") == "valid":
-                        result["natural_language_defensibility"] = review_candidate(candidate, document, path / "reviews", config["review_votes"], config["codex_timeout_seconds"])
+                        result["natural_language_defensibility"] = review_candidate(candidate, document, path / "reviews", config["review_votes"], _agent_timeout(config), config)
                     write_json(path / "assessment.json", result)
                     print(f"{label}: {result['validity']['schema']}, {result['validity'].get('backend', {}).get('status', 'not_checked')}", flush=True)
     from .report import build_report
@@ -346,8 +383,11 @@ def main() -> None:
     freeze.add_argument("--review-record", type=Path, required=True)
     benchmark_review = sub.add_parser("review-benchmark", help="Collect independent agent reviews before freezing")
     benchmark_review.add_argument("--output", type=Path, required=True)
+    benchmark_review.add_argument("--config", type=Path, default=ROOT / "configs" / "preliminary.json")
     benchmark_review.add_argument("--votes", type=int, default=3)
     benchmark_review.add_argument("--timeout", type=int, default=300)
+    models = sub.add_parser("models", help="List configured NVIDIA generation and review models")
+    models.add_argument("--config", type=Path, default=ROOT / "configs" / "preliminary.json")
     report = sub.add_parser("report", help="Write an evidence report from saved candidate assessments")
     report.add_argument("--run", type=Path, required=True)
     args = parser.parse_args()
@@ -363,6 +403,8 @@ def main() -> None:
             raise ValueError("Independent benchmark review is incomplete")
         if any(len(review.get("families", {}).get(family, [])) != review["votes_per_family"] or any("error" in vote for vote in review["families"][family]) for family in ("character", "authority")):
             raise ValueError("Independent benchmark review has missing or failed votes")
+        if review.get("config_sha256") and review["config_sha256"] != hashlib.sha256(args.config.read_bytes()).hexdigest():
+            raise ValueError("Benchmark review used a different model configuration")
         hashes = _hashes(_files_for_manifest(args.config))
         write_json(BASE / "freeze.json", {"frozen_at_utc": datetime.now(timezone.utc).isoformat(), "review_record": str(args.review_record), "review_record_sha256": hashlib.sha256(args.review_record.read_bytes()).hexdigest(), "file_hashes": hashes})
         print(f"Frozen {len(hashes)} source and prompt files")
@@ -370,7 +412,18 @@ def main() -> None:
         from .report import build_report
         print(build_report(args.run))
     elif args.command == "review-benchmark":
-        print(review_benchmark(args.output, args.votes, args.timeout))
+        print(review_benchmark(args.output, args.votes, args.timeout, args.config))
+    elif args.command == "models":
+        config = read_json(args.config)
+        specs = configured_models(config)
+        if not specs:
+            print("This configuration uses the local Codex CLI.")
+        else:
+            available = set(list_nvidia_models(specs[0]["base_url"]))
+            for spec in specs:
+                status = "listed" if spec["model"] in available else "not_listed"
+                print(f"{spec['role']}: {spec['model']} [{status}]")
+            print("Listing does not guarantee inference access; test a model before a full run.")
     else:
         run(args.config, args.output, args.reviews, args.allow_provisional)
 

@@ -58,10 +58,10 @@ class PipelineIntegrationTest(unittest.TestCase):
                             self.assertTrue(assessment['validity']['backend']['agrees_with_finite_checker'])
                         else:
                             self.assertTrue((candidate_dir / 'backend' / 'Candidate.thy').is_file())
-                        self.assertTrue((candidate_dir / 'codex_call' / 'prompt.txt').is_file())
+                        self.assertTrue((candidate_dir / 'generation_call' / 'prompt.txt').is_file())
                         self.assertEqual(len(list((candidate_dir / 'reviews').glob('vote-*.json'))), 3)
 
-                prompt = (run_dir / 'candidates' / 'character-inconsistent__fol__direct__01' / 'codex_call' / 'prompt.txt').read_text()
+                prompt = (run_dir / 'candidates' / 'character-inconsistent__fol__direct__01' / 'generation_call' / 'prompt.txt').read_text()
                 self.assertNotIn('Toy case C05', prompt)
                 self.assertNotIn('intended_consistency', prompt)
                 findings = (run_dir / 'findings.md').read_text()
@@ -94,7 +94,7 @@ class PipelineIntegrationTest(unittest.TestCase):
             self.assertEqual(good['validity']['schema'], 'valid')
             self.assertEqual(failed['validity']['schema'], 'generation_failed')
             self.assertIn('Codex exited 2', failed['validity']['reason'])
-            self.assertIn('toy generation failure', (failed_dir / 'codex_call' / 'stderr.log').read_text())
+            self.assertIn('toy generation failure', (failed_dir / 'generation_call' / 'stderr.log').read_text())
             self.assertIn('Generation or schema failure: 1/2 candidates', (run_dir / 'findings.md').read_text())
 
 

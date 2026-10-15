@@ -4,5 +4,6 @@ __pycache__/
 runs/
 !runs/.gitkeep
 .env
+.env.swp
 *.log
 .DS_Store

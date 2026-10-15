@@ -1,10 +1,49 @@
 {
   "name": "preliminary",
-  "documents": ["character-consistent", "character-inconsistent", "authority-consistent", "authority-inconsistent"],
-  "methods": ["smt", "fol", "asp", "isabelle"],
-  "prompt_modes": ["direct", "structured"],
+  "documents": [
+    "character-consistent",
+    "character-inconsistent",
+    "authority-consistent",
+    "authority-inconsistent"
+  ],
+  "methods": [
+    "smt",
+    "fol",
+    "asp",
+    "isabelle"
+  ],
+  "prompt_modes": [
+    "direct",
+    "structured"
+  ],
   "repetitions": 2,
   "review_votes": 3,
-  "codex_timeout_seconds": 300,
-  "isabelle_timeout_seconds": 300
+  "isabelle_timeout_seconds": 300,
+  "agents": {
+    "provider": "nvidia",
+    "base_url": "https://integrate.api.nvidia.com/v1",
+    "generation": {
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "temperature": 1.0,
+      "max_tokens": 8192
+    },
+    "review_models": [
+      {
+        "model": "z-ai/glm-5.3",
+        "temperature": 0.2,
+        "max_tokens": 4096
+      },
+      {
+        "model": "google/gemma-4-31b-it",
+        "temperature": 0.2,
+        "max_tokens": 4096
+      },
+      {
+        "model": "openai/gpt-oss-20b",
+        "temperature": 0.2,
+        "max_tokens": 4096
+      }
+    ]
+  },
+  "agent_timeout_seconds": 300
 }
