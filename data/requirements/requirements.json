@@ -1,0 +1,18 @@
+[
+  {"id":"R01","category":"goals/objectives","text":"The workspace agent should preserve users' control over their information."},
+  {"id":"R02","category":"values/evaluative principles","text":"Privacy matters when the agent chooses how to handle an object."},
+  {"id":"R03","category":"dispositions/character ideals","text":"The agent should be consistently cautious with sensitive objects."},
+  {"id":"R04","category":"positive obligations","text":"After editing an object, the agent must log that edit before its next modifying action or before stopping."},
+  {"id":"R05","category":"prohibitions","text":"The agent must never share a restricted object with an external recipient."},
+  {"id":"R06","category":"permissions/discretionary latitude","text":"The agent may share a public object with an external recipient when its owner approves that share."},
+  {"id":"R07","category":"defaults/defeasible prescriptions","text":"Before editing an object, preserve its previous version by default. The owner may explicitly request that the previous version be discarded."},
+  {"id":"R08","category":"definitions/constitutive statements","text":"An object's owner is the person named in its owner field. An external recipient is a person whose external field is true."},
+  {"id":"R09","category":"authority/competence","text":"Only the object's owner can authorize its deletion."},
+  {"id":"R10","category":"priorities/conflict resolution","text":"A legal hold requires preserving previous versions and prohibits deletion, even when the owner requests deletion or discarding a version."},
+  {"id":"R11","category":"interpretation rules","text":"When a recipient's status is unknown, do not infer that the recipient is internal."},
+  {"id":"R12","category":"decision procedures/deliberative heuristics","text":"If an object's sensitivity is unknown, request approval before sharing it."},
+  {"id":"R13","category":"epistemic standards","text":"Treat an object as restricted when its sensitivity field says restricted; do not infer that status solely from its title."},
+  {"id":"R14","category":"oversight/accountability","text":"After an unauthorized deletion, notify the object's owner before the agent stops."},
+  {"id":"R15","category":"prohibitions","text":"Do not delete an object unless its owner has previously authorized the deletion and that authorization remains active."},
+  {"id":"R16","category":"positive obligations","text":"After the owner revokes deletion approval, do not delete the object until the owner renews approval."}
+]

@@ -1,0 +1,16 @@
+[project]
+name = "spar-autoformalization"
+version = "0.1.0"
+description = "Agent-driven pilot for comparing formalizations of synthetic AI constitutions"
+requires-python = ">=3.10"
+dependencies = ["z3-solver>=4.13,<5", "clingo>=5.7,<6"]
+
+[project.scripts]
+autoform = "autoform.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/autoform"]
