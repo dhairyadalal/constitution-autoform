@@ -4,19 +4,18 @@ This repository compares how four method-conditioned formalizers represent the s
 
 The active workflow is under `src/autoform/constitution/`, `data/benchmark/`, `configs/`, and `prompts/`. The CLI command is `autoform`. The earlier pilot data and code have been removed from this checkout. Git history retains them.
 
-Install with `uv sync` or `pip install -e .`. Put your NVIDIA API key in the ignored `.env` file as `NVIDIA_API_KEY=...`. The tracked `.env.example` shows the format. The default configuration uses [Nemotron 3 Super](https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-super-120b-a12b-infer) for generation and GLM-5.3, Gemma 4 31B, and GPT OSS 20B for three review votes. All four IDs were listed for the configured key and returned schema-valid JSON in a minimal live probe on 2026-10-15. This checks basic endpoint access, not performance on the benchmark. Edit `configs/preliminary.json` to change them. The key is never written to run traces.
+Install with `uv sync` or `pip install -e .`. The default configuration pins authenticated Codex CLI calls to `gpt-6-luna` with medium reasoning for generation and three separate review calls. The NVIDIA adapter remains optional in `configs/nvidia.json`; it reads `NVIDIA_API_KEY` from the ignored `.env` file. Initial full-document NVIDIA reviews were slow or malformed, so that provider is not the current experiment default.
 
 Set `ISABELLE_BIN` or put `isabelle` on `PATH` to run the Isabelle checker. Then:
 
 ```sh
-autoform models --config configs/preliminary.json
 autoform check-design
 autoform review-benchmark --config configs/preliminary.json --output runs/benchmark-review
 autoform freeze --config configs/preliminary.json --review-record runs/benchmark-review/review-record.json
 autoform run --config configs/preliminary.json --output runs/preliminary-<date> --reviews
 ```
 
-`autoform models` checks whether the configured IDs appear in NVIDIA's current catalog. Catalog presence does not establish inference access. Run a small provisional slice before the full experiment to inspect JSON validity, source fidelity, latency, and any API errors. The model calls are single-turn structured requests; no tool-using agent loop is involved. To retain the local Codex CLI path, set `agents.provider` to `codex` in a separate configuration file.
+Run a small provisional slice before the full experiment to inspect JSON validity, source fidelity, latency, and any agent errors. The model calls are single-turn structured requests. To try the optional NVIDIA configuration, use `autoform models --config configs/nvidia.json` and pass that configuration explicitly to the other commands.
 
 Review the independent agent readings before freezing. The default run makes 64 candidate calls across four documents, four backends, two prompt modes, and two repetitions, plus three agent reviews per valid candidate. `autoform report --run runs/<run>` generates a deterministic Markdown analysis for a run whose source hashes match the current checkout. For a repeatable end-to-end check, run `uv run python -m unittest discover -s tests -v`. The tests use a small toy constitution with local Codex and HTTP stand-ins, so they make no hosted model calls. SMT, FOL, and ASP run normally. Isabelle runs if its executable is available; otherwise the test checks the recorded `not_run` status and generated theory.
 

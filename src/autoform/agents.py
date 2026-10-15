@@ -38,7 +38,7 @@ def agent_spec(config: dict, role: str, vote_index: int = 0) -> dict:
     agents = config.get("agents", {"provider": "codex"})
     provider = agents.get("provider", "codex")
     if provider == "codex":
-        return {"provider": "codex"}
+        return {"provider": "codex", "model": agents.get("model"), "reasoning_effort": agents.get("reasoning_effort")}
     if provider != "nvidia":
         raise ValueError(f"Unknown agent provider: {provider}")
     if role == "generation":
@@ -160,7 +160,12 @@ def call_nvidia(prompt: str, schema: dict, trace_dir: Path, timeout: int, spec: 
         content = choice["message"]["content"]
         if not isinstance(content, str):
             raise RuntimeError("NVIDIA returned no text content")
-        result = json.loads(content)
+        response_text = content.strip()
+        if response_text.startswith("```"):
+            lines = response_text.splitlines()
+            if len(lines) >= 3 and lines[0].lower() in {"```", "```json"} and lines[-1] == "```":
+                response_text = "\n".join(lines[1:-1])
+        result = json.loads(response_text)
         _validate(result, schema)
         (trace_dir / "response.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         metadata = {"provider": "nvidia", "requested_model": spec["model"], "returned_model": response.get("model"), "response_id": response.get("id"), "finish_reason": choice.get("finish_reason"), "usage": response.get("usage")}
@@ -173,7 +178,7 @@ def call_nvidia(prompt: str, schema: dict, trace_dir: Path, timeout: int, spec: 
 
 def call_agent(prompt: str, schema: dict, trace_dir: Path, timeout: int, spec: dict) -> dict:
     if spec["provider"] == "codex":
-        return call_codex(prompt, schema, trace_dir, timeout)
+        return call_codex(prompt, schema, trace_dir, timeout, model=spec.get("model"), reasoning_effort=spec.get("reasoning_effort"))
     return call_nvidia(prompt, schema, trace_dir, timeout, spec)
 
 

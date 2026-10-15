@@ -100,7 +100,7 @@ def build_report(run_dir: Path) -> Path:
         "",
         "The unit of analysis is a candidate constitution. Each target backend compiles from a candidate's common finite rule representation. Differences between target conditions concern method-conditioned extraction and checking, not independently generated native syntax. The source documents and cases are synthetic. Independent review votes are agent interpretations, not human annotations or semantic ground truth.",
         "",
-        "Generation model: `" + config.get("agents", {}).get("generation", {}).get("model", "local Codex CLI") + "`. Review models: " + ", ".join("`" + item["model"] + "`" for item in config.get("agents", {}).get("review_models", [])) + ("." if config.get("agents", {}).get("review_models") else "local Codex CLI."),
+        "Generation model: `" + config.get("agents", {}).get("generation", {}).get("model", config.get("agents", {}).get("model", "local Codex CLI")) + "`. Review models: " + ", ".join("`" + item["model"] + "`" for item in config.get("agents", {}).get("review_models", [])) + ("." if config.get("agents", {}).get("review_models") else "`" + config.get("agents", {}).get("model", "local Codex CLI") + "` (three separate calls)."),
         "",
         "## Key results", "",
         "| Document | Backend | Candidates | Schema-valid | Source quotes exact | Backend checked | Correct conflict finding | Complete exact core | Case status matches |",

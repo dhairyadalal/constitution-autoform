@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests" / "fixtures" / "toy-benchmark"
 MODELS = [
     "nvidia/nemotron-3-super-120b-a12b",
-    "z-ai/glm-5.3",
+    "nvidia/nemotron-3-ultra-550b-a55b",
     "google/gemma-4-31b-it",
     "openai/gpt-oss-20b",
 ]
@@ -78,6 +78,8 @@ class Handler(BaseHTTPRequestHandler):
                     "source_quote": "Do not send a short alert without consent.", "overrides": [],
                 })
             content = json.dumps({"rules": rules, "assumptions": [], "unsupported_clauses": [], "decomposition": []})
+        if payload["model"] == "fenced-json":
+            content = "```json\n" + content + "\n```"
         self._send(200, {
             "id": "local-response", "model": payload["model"],
             "choices": [{"message": {"content": content}, "finish_reason": "stop"}],
@@ -141,6 +143,9 @@ class NvidiaProviderIntegrationTest(unittest.TestCase):
                     with self.assertRaisesRegex(RuntimeError, "failed"):
                         agents.call_nvidia("Toy prompt", runner.CANDIDATE_SCHEMA, temp / "bad-call", 10, bad_spec)
                     self.assertIn("missing", (temp / "bad-call" / "error.txt").read_text())
+                    fenced_spec = {**bad_spec, "model": "fenced-json"}
+                    fenced = agents.call_nvidia("Toy prompt", runner.CANDIDATE_SCHEMA, temp / "fenced-call", 10, fenced_spec)
+                    self.assertTrue(fenced["rules"])
         finally:
             server.shutdown()
             thread.join(timeout=5)

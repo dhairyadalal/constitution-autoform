@@ -323,7 +323,8 @@ def run(config_path: Path, output_dir: Path, with_reviews: bool = False, allow_p
         if read_json(manifest_path)["file_hashes"] != hashes:
             raise RuntimeError("Benchmark or prompt changed; create a new run directory")
     else:
-        write_json(manifest_path, {"created_at_utc": datetime.now(timezone.utc).isoformat(), "config": config, "file_hashes": hashes, "benchmark_status": "frozen" if freeze_path.exists() else "provisional_development", "input_boundary": "Formalizer prompt contains public inputs only. NVIDIA hosted inference receives the prompt remotely; local Codex CLI filesystem access is not a hard security boundary."})
+        boundary = "Formalizer prompt contains public inputs only. " + ("NVIDIA hosted inference receives the prompt remotely." if generation_agent["provider"] == "nvidia" else "Local Codex CLI filesystem read access is not a hard security boundary.")
+        write_json(manifest_path, {"created_at_utc": datetime.now(timezone.utc).isoformat(), "config": config, "file_hashes": hashes, "benchmark_status": "frozen" if freeze_path.exists() else "provisional_development", "input_boundary": boundary})
     for document in config["documents"]:
         for method in config["methods"]:
             for mode in config["prompt_modes"]:

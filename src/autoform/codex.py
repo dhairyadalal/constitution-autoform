@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 
-def call_codex(prompt: str, schema: dict, trace_dir: Path, timeout: int) -> dict:
+def call_codex(prompt: str, schema: dict, trace_dir: Path, timeout: int, model: str | None = None, reasoning_effort: str | None = None) -> dict:
     trace_dir.mkdir(parents=True, exist_ok=True)
     (trace_dir / "prompt.txt").write_text(prompt, encoding="utf-8")
     if shutil.which("codex") is None:
@@ -26,6 +26,10 @@ def call_codex(prompt: str, schema: dict, trace_dir: Path, timeout: int) -> dict
             "-s", "read-only", "-C", str(temp_path),
             "--output-schema", str(schema_path), "-o", str(output_path), "-",
         ]
+        if model:
+            command[1:1] = ["-m", model]
+        if reasoning_effort:
+            command[1:1] = ["-c", f"model_reasoning_effort={reasoning_effort}"]
         (trace_dir / "command.json").write_text(json.dumps(command, indent=2), encoding="utf-8")
         try:
             result = subprocess.run(
