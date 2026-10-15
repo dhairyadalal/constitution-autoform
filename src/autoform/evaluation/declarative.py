@@ -94,7 +94,7 @@ def _run_z3(artifact: str, case: dict) -> dict:
 
     true_check = satisfiable(expression)
     false_check = satisfiable(f"(not {expression})")
-    if z3.unknown in {true_check, false_check}:
+    if true_check == z3.unknown or false_check == z3.unknown:
         return {"answer": "unresolved", "reason": "Z3 returned unknown"}
     if true_check == z3.unsat and false_check == z3.unsat:
         raise ValueError("Inconsistent fact model or expression")

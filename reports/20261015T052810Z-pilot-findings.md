@@ -1,3 +1,7 @@
+# Workflow baseline: Python carries part of the normative logic
+
+Source inspection found candidates that decided approval and exceptions in Python before asking Z3 to check a Boolean expression. The figures below assess the generated programs as a workflow baseline; they do not isolate the contribution of the formalism. The declarative comparison uses fixed fact encoders and solver rules.
+
 ## Research question
 Which distinctions in one shared synthetic constitution benchmark survive formalization across methods?
 

@@ -77,9 +77,14 @@ def build_report(run_dir: Path, agent_writeup: bool = False, timeout: int = 180)
         )
     if not examples:
         lines.append("No determinate mismatches in the saved run.")
+    limitation = (
+        "The benchmark is small and synthetic. Reference judgments come from agents, so shared model assumptions may affect both generation and evaluation. The declarative adapters enforce solver-level normative rules, but the adapters' fact semantics and the generated rules still require inspection. Prompt-level separation does not prevent a local Codex process from reading other host files. Unintegrated methods are recorded as not run."
+        if manifest.get("artifact_mode") == "declarative" else
+        "The benchmark is small and synthetic. Reference judgments come from agents, so shared model assumptions may affect both generation and evaluation. Candidate source requires qualitative inspection to confirm that the named solver carries the normative reasoning. Prompt-level separation does not prevent a local Codex process from reading other host files. Unintegrated methods are recorded as not run."
+    )
     lines.extend([
         "", "## Limits",
-        "The benchmark is small and synthetic. Reference judgments come from agents, so shared model assumptions may affect both generation and evaluation. Candidate source requires qualitative inspection to confirm that the named solver carries the normative reasoning. Prompt-level separation does not prevent a local Codex process from reading other host files. Unintegrated methods are recorded as not run.",
+        limitation,
         "", "## Reproduction",
         "See `manifest.json`, `reference.json`, `results.json`, and each candidate's saved prompt, response, source, and command trace in this run directory.",
         "",
